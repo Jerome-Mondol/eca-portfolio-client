@@ -1,0 +1,69 @@
+"use client";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input, Label } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/components/ui/toast";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const { login } = useAuth();
+  const { success, error: toastError } = useToast();
+  const [email, setEmail] = useState("john@example.com");
+  const [password, setPassword] = useState("password123");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      await login(email, password);
+      success("Welcome back", "Signed in successfully");
+      router.push("/dashboard");
+    } catch (err: any) {
+      const msg = err.message ?? "Login failed";
+      setError(msg);
+      toastError("Login failed", msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card className="w-full max-w-[420px] p-6 sm:p-7">
+      <h1 className="text-xl font-semibold tracking-tight">Welcome back</h1>
+      <p className="text-sm text-[#6b6b76] mt-1">Log in to continue building your portfolio.</p>
+      <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        {error && <div className="rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2">{error}</div>}
+        <div>
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" type="email" placeholder="john@example.com" required className="mt-1.5" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
+        <div>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Password</Label>
+            <Link href="/forgot-password" className="text-xs text-[#6b6b76] hover:text-[#111827]">
+              Forgot password?
+            </Link>
+          </div>
+          <Input id="password" type="password" placeholder="••••••••" required className="mt-1.5" value={password} onChange={(e) => setPassword(e.target.value)} />
+        </div>
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Signing in..." : "Log in"}
+        </Button>
+        <p className="text-center text-sm text-[#6b6b76]">
+          Don&apos;t have an account? <Link href="/register" className="font-medium text-[#111827] hover:underline">Create one</Link>
+        </p>
+      </form>
+      <div className="mt-6 rounded-xl bg-[#f8f8f9] border border-[#e8e8ea] p-3">
+        <p className="text-xs font-medium">Secure auth</p>
+        <p className="text-xs text-[#6b6b76] mt-1">Access 15m + Refresh 7d</p>
+      </div>
+    </Card>
+  );
+}
