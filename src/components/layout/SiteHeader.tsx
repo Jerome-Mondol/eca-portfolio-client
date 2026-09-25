@@ -12,7 +12,7 @@ export function SiteHeader() {
         <Link href="/" className="flex items-center gap-2 min-h-[44px] shrink-0">
           <div className="h-7 w-7 rounded-lg bg-[#111827] flex items-center justify-center text-white text-[13px] font-bold tracking-tighter shrink-0">◈</div>
           <span className="text-[15px] font-semibold tracking-tight">folio</span>
-          <span className="hidden sm:inline text-[11px] font-medium text-[#0f766e] bg-[#ecfdf5] border border-[#a7f3d0] rounded-full px-2 py-0.5 ml-1">ECA Showcase • Educational</span>
+          
         </Link>
 
         <nav className="hidden md:flex items-center gap-6 text-[13.5px] font-medium text-[#3f3f46]">

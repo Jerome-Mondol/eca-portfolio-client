@@ -7,6 +7,8 @@ import { Input, Label, Textarea } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Loader2 } from "lucide-react";
 import { listExperiencesApi, createExperienceApi, updateExperienceApi, deleteExperienceApi, type Experience } from "@/lib/api";
 
 export default function ExperiencePage() {
@@ -23,6 +25,8 @@ export default function ExperiencePage() {
   const [current, setCurrent] = useState(false);
   const [description, setDescription] = useState("");
   const [skills, setSkills] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchList = async () => {
     try {
@@ -41,6 +45,7 @@ export default function ExperiencePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!position.trim()) { toastError("Position required"); return; }
+    setSaving(true);
     const payload: any = {
       position: position.trim(),
       organization: organization.trim() || null,
@@ -64,6 +69,8 @@ export default function ExperiencePage() {
       reset();
     } catch (err: any) {
       toastError("Save failed", err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -81,12 +88,15 @@ export default function ExperiencePage() {
   };
   const handleDelete = async (id: string) => {
     if (!confirm("Delete?")) return;
+    setDeletingId(id);
     try {
       await deleteExperienceApi(id);
       setItems((v) => v.filter((x) => x.id !== id));
       success("Deleted");
     } catch (e: any) {
       toastError("Delete failed", e.message);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -122,17 +132,11 @@ export default function ExperiencePage() {
               </div>
             </div>
             <div className="grid sm:grid-cols-3 gap-3">
-              <div>
-                <Label>Start</Label>
-                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-1.5" />
-              </div>
-              <div>
-                <Label>End</Label>
-                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} disabled={current} className="mt-1.5" />
-              </div>
-              <div className="flex items-end">
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={current} onChange={(e) => setCurrent(e.target.checked)} className="h-4 w-4" /> Current
+              <DatePicker value={startDate} onChange={setStartDate} label="Start date" placeholder="Pick start" />
+              <DatePicker value={endDate} onChange={setEndDate} label="End date" placeholder="Pick end" disabled={current} />
+              <div className="flex items-end pb-1">
+                <label className="flex items-center gap-2 text-sm cursor-pointer select-none min-h-[44px]">
+                  <input type="checkbox" checked={current} onChange={(e) => setCurrent(e.target.checked)} className="h-4 w-4 rounded border-[#e8e8ea] accent-[#111827]" /> Current
                 </label>
               </div>
             </div>
@@ -144,7 +148,10 @@ export default function ExperiencePage() {
               <Label>Skills (comma separated)</Label>
               <Input value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="React, Leadership" className="mt-1.5" />
             </div>
-            <Button type="submit" className="w-full sm:w-auto cursor-pointer">{editing ? "Update" : "Create"} experience</Button>
+            <Button type="submit" disabled={saving} className="w-full sm:w-auto cursor-pointer min-h-[44px]">
+              {saving && <Loader2 size={14} className="mr-2 animate-spin" />}
+              {saving ? (editing ? "Updating..." : "Creating...") : editing ? "Update experience" : "Create experience"}
+            </Button>
           </form>
         </Card>
       )}
@@ -159,15 +166,17 @@ export default function ExperiencePage() {
                 <div>
                   <h3 className="font-semibold text-sm">{ex.position}</h3>
                   <p className="text-sm text-[#6b6b76]">{[ex.organization, ex.location].filter(Boolean).join(" • ") || "—"}</p>
-                  <p className="text-xs text-[#8a8a94] mt-1">{ex.startDate ?? ""} {ex.endDate ? `— ${ex.endDate}` : ex.current ? "— Present" : ""} {ex.current && <span className="ml-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5">Current</span>}</p>
+                  <p className="text-xs text-[#8a8a94] mt-1">{ex.startDate ? new Date(ex.startDate + "T12:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : ""} {ex.endDate ? `— ${new Date(ex.endDate + "T12:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}` : ex.current ? "— Present" : ""} {ex.current && <span className="ml-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5">Current</span>}</p>
                 </div>
                 <Badge>{ex.visibility ?? "public"}</Badge>
               </div>
               {ex.description && <p className="text-sm text-[#4a4a52] mt-2">{ex.description}</p>}
               {ex.skills && ex.skills.length > 0 && <div className="flex flex-wrap gap-1.5 mt-2">{ex.skills.map((s) => <Badge key={s}>{s}</Badge>)}</div>}
               <div className="mt-3 flex gap-2">
-                <button onClick={() => handleEdit(ex)} className="text-xs font-medium border border-[#e8e8ea] rounded-full px-3 py-1.5 hover:bg-[#f8f8f9] cursor-pointer flex-1">Edit</button>
-                <button onClick={() => handleDelete(ex.id)} className="text-xs font-medium border border-red-200 text-red-600 rounded-full px-3 py-1.5 hover:bg-red-50 cursor-pointer flex-1">Delete</button>
+                <button onClick={() => handleEdit(ex)} className="text-xs font-medium border border-[#e8e8ea] rounded-full px-3 py-2 hover:bg-[#f8f8f9] cursor-pointer flex-1 min-h-[36px]">Edit</button>
+                <button onClick={() => handleDelete(ex.id)} disabled={deletingId === ex.id} className="text-xs font-medium border border-red-200 text-red-600 rounded-full px-3 py-2 hover:bg-red-50 cursor-pointer flex-1 min-h-[36px] flex items-center justify-center gap-1 disabled:opacity-50">
+                  {deletingId === ex.id && <Loader2 size={12} className="animate-spin" />} Delete
+                </button>
               </div>
             </Card>
           ))}

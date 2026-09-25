@@ -6,12 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DatePicker } from "@/components/ui/date-picker";
 import { useToast } from "@/components/ui/toast";
-import { listCoursesApi, createCourseApi, updateCourseApi, deleteCourseApi, type Course } from "@/lib/api";
+import { listCoursesApi, createCourseApi, updateCourseApi, deleteCourseApi, listCertificatesApi, type Course, type Certificate } from "@/lib/api";
 
 export default function CoursesPage() {
   const { success, error: toastError } = useToast();
   const [items, setItems] = useState<Course[]>([]);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Course | null>(null);
@@ -20,25 +22,40 @@ export default function CoursesPage() {
   const [instructor, setInstructor] = useState("");
   const [description, setDescription] = useState("");
   const [skills, setSkills] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [completionDate, setCompletionDate] = useState("");
+  const [linkedCertId, setLinkedCertId] = useState<string>("");
+  const [saving, setSaving] = useState(false);
 
-  const fetchList = async () => {
+  const fetchAll = async () => {
     try {
-      const res = await listCoursesApi();
-      setItems(res.data);
+      const [coursesRes, certsRes] = await Promise.all([listCoursesApi().catch(() => ({ data: [] as Course[] })), listCertificatesApi().catch(() => ({ data: [] as Certificate[] }))]);
+      setItems(coursesRes.data);
+      setCertificates(certsRes.data);
     } catch (e: any) {
-      toastError("Failed to load courses", e.message);
+      toastError("Failed to load", e.message);
     } finally {
       setLoading(false);
     }
   };
-  useEffect(() => { fetchList(); }, []);
+  useEffect(() => { fetchAll(); }, []);
 
-  const reset = () => { setName(""); setProvider(""); setInstructor(""); setDescription(""); setSkills(""); setEditing(null); setShowForm(false); };
+  const reset = () => { setName(""); setProvider(""); setInstructor(""); setDescription(""); setSkills(""); setStartDate(""); setCompletionDate(""); setLinkedCertId(""); setEditing(null); setShowForm(false); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) { toastError("Name required"); return; }
-    const payload: any = { name: name.trim(), provider: provider.trim() || null, instructor: instructor.trim() || null, description: description.trim() || null, skills: skills.split(",").map((s) => s.trim()).filter(Boolean) };
+    setSaving(true);
+    const payload: any = {
+      name: name.trim(),
+      provider: provider.trim() || null,
+      instructor: instructor.trim() || null,
+      description: description.trim() || null,
+      skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
+      startDate: startDate || null,
+      completionDate: completionDate || null,
+      certificateId: linkedCertId || null,
+    };
     try {
       if (editing) {
         const res = await updateCourseApi(editing.id, payload);
@@ -52,6 +69,8 @@ export default function CoursesPage() {
       reset();
     } catch (err: any) {
       toastError("Save failed", err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -62,6 +81,9 @@ export default function CoursesPage() {
     setInstructor(c.instructor ?? "");
     setDescription(c.description ?? "");
     setSkills((c.skills ?? []).join(", "));
+    setStartDate((c as any).startDate ?? "");
+    setCompletionDate((c as any).completionDate ?? "");
+    setLinkedCertId((c as any).certificateId ?? "");
     setShowForm(true);
   };
   const handleDelete = async (id: string) => {
@@ -75,6 +97,8 @@ export default function CoursesPage() {
     }
   };
 
+  const getLinkedCert = (id?: string | null) => certificates.find((c) => c.id === id);
+
   if (loading) return <div className="grid gap-4"><Skeleton className="h-32" /><Skeleton className="h-32" /></div>;
 
   return (
@@ -82,7 +106,7 @@ export default function CoursesPage() {
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Courses</h1>
-          <p className="text-sm text-[#6b6b76]">Courses with skills and credentials.</p>
+          <p className="text-sm text-[#6b6b76]">Learned skills — link a certificate for proof.</p>
         </div>
         <Button onClick={() => (showForm ? reset() : setShowForm(true))} className="w-full sm:w-auto min-h-[44px] cursor-pointer">
           {showForm ? "Cancel" : "＋ Add Course"}
@@ -106,6 +130,20 @@ export default function CoursesPage() {
                 <Input value={instructor} onChange={(e) => setInstructor(e.target.value)} placeholder="Jhankar Mahbub" className="mt-1.5" />
               </div>
             </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <DatePicker value={startDate} onChange={setStartDate} label="Start date" placeholder="Pick start" />
+              <DatePicker value={completionDate} onChange={setCompletionDate} label="Completion date" placeholder="Pick completion" />
+            </div>
+            <div>
+              <Label>Link certificate (optional)</Label>
+              <select value={linkedCertId} onChange={(e) => setLinkedCertId(e.target.value)} className="mt-1.5 w-full h-11 rounded-xl border border-[#e8e8ea] bg-white px-3 text-sm cursor-pointer">
+                <option value="">No certificate linked</option>
+                {certificates.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name} • {c.organization ?? ""}</option>
+                ))}
+              </select>
+              <p className="text-xs text-[#8a8a94] mt-1">Select a certificate to prove this course. You can link later.</p>
+            </div>
             <div>
               <Label>Description</Label>
               <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What you learned" className="mt-1.5" />
@@ -114,7 +152,9 @@ export default function CoursesPage() {
               <Label>Skills (comma separated)</Label>
               <Input value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="React, Node.js" className="mt-1.5" />
             </div>
-            <Button type="submit" className="w-full sm:w-auto cursor-pointer">{editing ? "Update" : "Create"} course</Button>
+            <Button type="submit" disabled={saving} className="w-full sm:w-auto cursor-pointer min-h-[44px]">
+              {saving ? "Saving..." : editing ? "Update course" : "Create course"}
+            </Button>
           </form>
         </Card>
       )}
@@ -123,24 +163,33 @@ export default function CoursesPage() {
         <EmptyState title="No courses yet" description="Add your courses to build your portfolio." actionLabel="Add course" onAction={() => setShowForm(true)} />
       ) : (
         <div className="grid lg:grid-cols-2 gap-4">
-          {items.map((c) => (
-            <Card key={c.id} className="p-5">
-              <h3 className="font-semibold text-sm">{c.name}</h3>
-              <p className="text-xs text-[#6b6b76] mt-1">{[c.provider, c.instructor].filter(Boolean).join(" • ") || "—"}</p>
-              {c.description && <p className="text-sm text-[#4a4a52] mt-2">{c.description}</p>}
-              {c.skills && c.skills.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {c.skills.map((s) => (
-                    <Badge key={s}>{s}</Badge>
-                  ))}
+          {items.map((c) => {
+            const linked = getLinkedCert((c as any).certificateId);
+            return (
+              <Card key={c.id} className="p-5">
+                <h3 className="font-semibold text-sm">{c.name}</h3>
+                <p className="text-xs text-[#6b6b76] mt-1">{[c.provider, c.instructor].filter(Boolean).join(" • ") || "—"}</p>
+                {(c as any).completionDate && <p className="text-xs text-[#8a8a94] mt-1">Completed {new Date((c as any).completionDate + "T12:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</p>}
+                {linked && (
+                  <div className="mt-2 inline-flex items-center gap-1.5 text-xs bg-[#ecfdf5] border border-[#a7f3d0] text-[#065f46] rounded-full px-2.5 py-1">
+                    <span>🔗 Linked:</span> <span className="font-medium">{linked.name}</span>
+                  </div>
+                )}
+                {c.description && <p className="text-sm text-[#4a4a52] mt-2">{c.description}</p>}
+                {c.skills && c.skills.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {c.skills.map((s) => (
+                      <Badge key={s}>{s}</Badge>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-3 flex gap-2">
+                  <button onClick={() => handleEdit(c)} className="text-xs font-medium border border-[#e8e8ea] rounded-full px-3 py-1.5 hover:bg-[#f8f8f9] cursor-pointer flex-1">Edit</button>
+                  <button onClick={() => handleDelete(c.id)} className="text-xs font-medium border border-red-200 text-red-600 rounded-full px-3 py-1.5 hover:bg-red-50 cursor-pointer flex-1">Delete</button>
                 </div>
-              )}
-              <div className="mt-3 flex gap-2">
-                <button onClick={() => handleEdit(c)} className="text-xs font-medium border border-[#e8e8ea] rounded-full px-3 py-1.5 hover:bg-[#f8f8f9] cursor-pointer flex-1">Edit</button>
-                <button onClick={() => handleDelete(c.id)} className="text-xs font-medium border border-red-200 text-red-600 rounded-full px-3 py-1.5 hover:bg-red-50 cursor-pointer flex-1">Delete</button>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

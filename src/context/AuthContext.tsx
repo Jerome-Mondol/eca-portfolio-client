@@ -61,6 +61,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await loginApi({ email, password });
       setUser(data.user);
+      // Prefetch for near-instant navigation — warms client + server Redis cache
+      import("@/lib/api").then(({ prefetchAll }) => prefetchAll());
     } catch (e: any) {
       setError(e.message ?? "Login failed");
       throw e;
@@ -75,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await registerApi(data);
       setUser(res.user);
+      import("@/lib/api").then(({ prefetchAll }) => prefetchAll());
     } catch (e: any) {
       setError(e.message ?? "Registration failed");
       throw e;

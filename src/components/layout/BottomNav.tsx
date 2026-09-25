@@ -16,6 +16,14 @@ const items = [
 export function BottomNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const prefetch = (href: string) => {
+    import("@/lib/api").then((api) => {
+      if (href === "/dashboard") api.getDashboardSummaryApi().catch(() => {});
+      else if (href === "/dashboard/profile") api.getProfileApi().catch(() => {});
+      else if (href === "/dashboard/portfolio") api.getProfileApi().catch(() => {});
+      else if (href === "/dashboard/ai") api.listProjectsApi().catch(() => {});
+    });
+  };
   return (
     <>
       <nav
@@ -30,8 +38,10 @@ export function BottomNav() {
               <Link
                 key={it.href}
                 href={it.href}
+                onMouseEnter={() => prefetch(it.href)}
+                onTouchStart={() => prefetch(it.href)}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl min-w-[56px] min-h-[52px]",
+                  "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl min-w-[56px] min-h-[52px] cursor-pointer",
                   active ? "text-[#111827] bg-[#f6f6f7]" : "text-[#6b6b76] active:bg-[#f3f3f5]"
                 )}
               >
@@ -56,8 +66,10 @@ export function BottomNav() {
               <Link
                 key={it.href}
                 href={it.href}
+                onMouseEnter={() => prefetch(it.href)}
+                onTouchStart={() => prefetch(it.href)}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl min-w-[56px] min-h-[52px]",
+                  "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl min-w-[56px] min-h-[52px] cursor-pointer",
                   active ? "text-[#111827] bg-[#f6f6f7]" : "text-[#6b6b76] active:bg-[#f3f3f5]"
                 )}
               >

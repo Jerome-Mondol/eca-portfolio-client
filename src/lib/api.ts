@@ -155,8 +155,8 @@ export async function deleteProjectApi(id: string) {
   return apiFetch(`/api/projects/${id}`, { method: "DELETE", auth: true });
 }
 
-// Activities (ECA)
-export type Activity = { id: string; userId: string; activityName: string; category?: string | null; organization?: string | null; role?: string | null; description?: string | null; skills?: string[] | null; visibility?: string; createdAt?: string };
+// Activities (ECA) — now with images (max 5, R2)
+export type Activity = { id: string; userId: string; activityName: string; category?: string | null; organization?: string | null; role?: string | null; description?: string | null; skills?: string[] | null; images?: string[] | null; visibility?: string; createdAt?: string };
 export async function listActivitiesApi() {
   const data = await apiFetch("/api/activities", { method: "GET", auth: true });
   return data as { data: Activity[] };
@@ -271,4 +271,59 @@ export async function createDocumentApi(payload: any) {
 }
 export async function deleteDocumentApi(id: string) {
   return apiFetch(`/api/documents/${id}`, { method: "DELETE", auth: true });
+}
+
+// Dashboard summary — single query, 30s cache, near-instant
+export type DashboardSummary = {
+  projects: number;
+  certificates: number;
+  activities: number;
+  courses: number;
+  experiences: number;
+  achievements: number;
+  skills: number;
+  documents: number;
+  featured: number;
+  profile?: any;
+  profileDone: boolean;
+  hasPhoto: boolean;
+  completion: number;
+};
+export async function getDashboardSummaryApi() {
+  const data = await apiFetch("/api/dashboard", { method: "GET", auth: true, revalidate: 15 });
+  return data as DashboardSummary;
+}
+
+// Public portfolio — real data, no auth, 60s cache
+export type PublicPortfolio = {
+  user: { id: string; username: string; fullName: string; email: string };
+  profile: { headline?: string | null; bio?: string | null; location?: string | null; education?: any; interests?: string[] | null; socials?: any; avatarKey?: string | null } | null;
+  projects: any[];
+  activities: any[];
+  certificates: any[];
+  courses: any[];
+  experiences: any[];
+  achievements: any[];
+  skills: any[];
+};
+export async function getPublicPortfolioApi(username: string) {
+  const data = await apiFetch(`/api/portfolio/${encodeURIComponent(username)}`, { method: "GET", revalidate: 60 });
+  return data as PublicPortfolio;
+}
+
+// Prefetch helper — fire-and-forget, warms cache for instant navigation
+export function prefetchDashboard() {
+  getDashboardSummaryApi().catch(() => {});
+  getProfileApi().catch(() => {});
+}
+export function prefetchAll() {
+  prefetchDashboard();
+  listProjectsApi().catch(() => {});
+  listActivitiesApi().catch(() => {});
+  listCertificatesApi().catch(() => {});
+  listCoursesApi().catch(() => {});
+  listExperiencesApi().catch(() => {});
+  listAchievementsApi().catch(() => {});
+  listSkillsApi().catch(() => {});
+  listDocumentsApi().catch(() => {});
 }

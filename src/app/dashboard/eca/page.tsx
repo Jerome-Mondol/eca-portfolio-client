@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
 import { listActivitiesApi, createActivityApi, updateActivityApi, deleteActivityApi, type Activity } from "@/lib/api";
+import { uploadImage } from "@/lib/upload";
+import { ImageSlider, ImageGridPreview } from "@/components/ui/image-slider";
+import { Upload, Loader2, X, Image as ImageIcon } from "lucide-react";
 
 export default function ECAPage() {
   const { success, error: toastError } = useToast();
@@ -21,6 +24,10 @@ export default function ECAPage() {
   const [role, setRole] = useState("");
   const [description, setDescription] = useState("");
   const [skills, setSkills] = useState("");
+  const [images, setImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const fetchList = async () => {
     try {
@@ -34,11 +41,41 @@ export default function ECAPage() {
   };
   useEffect(() => { fetchList(); }, []);
 
-  const reset = () => { setActivityName(""); setCategory(""); setOrganization(""); setRole(""); setDescription(""); setSkills(""); setEditing(null); setShowForm(false); };
+  const reset = () => {
+    setActivityName(""); setCategory(""); setOrganization(""); setRole(""); setDescription(""); setSkills(""); setImages([]); setEditing(null); setShowForm(false);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const remaining = 5 - images.length;
+    if (remaining <= 0) {
+      toastError("Max 5 images");
+      return;
+    }
+    const toUpload = Array.from(files).slice(0, remaining);
+    if (files.length > remaining) toastError(`Only ${remaining} more allowed`, `Max 5 images`);
+    setUploading(true);
+    try {
+      const uploaded: string[] = [];
+      for (const file of toUpload) {
+        const res = await uploadImage(file);
+        uploaded.push(res.url);
+      }
+      setImages((prev) => [...prev, ...uploaded].slice(0, 5));
+      success(`${uploaded.length} image${uploaded.length > 1 ? "s" : ""} uploaded`);
+    } catch (err: any) {
+      toastError("Upload failed", err.message);
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activityName.trim()) { toastError("Activity name required"); return; }
+    setSaving(true);
     const payload: any = {
       activityName: activityName.trim(),
       category: category.trim() || null,
@@ -46,6 +83,7 @@ export default function ECAPage() {
       role: role.trim() || null,
       description: description.trim() || null,
       skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
+      images: images.length > 0 ? images : null,
     };
     try {
       if (editing) {
@@ -60,6 +98,8 @@ export default function ECAPage() {
       reset();
     } catch (err: any) {
       toastError("Save failed", err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -71,6 +111,7 @@ export default function ECAPage() {
     setRole(a.role ?? "");
     setDescription(a.description ?? "");
     setSkills((a.skills ?? []).join(", "));
+    setImages((a as any).images ?? []);
     setShowForm(true);
   };
   const handleDelete = async (id: string) => {
@@ -91,7 +132,7 @@ export default function ECAPage() {
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">ECA & Activities</h1>
-          <p className="text-sm text-[#6b6b76]">Personality beyond grades.</p>
+          <p className="text-sm text-[#6b6b76]">Personality beyond grades — up to 5 images.</p>
         </div>
         <Button onClick={() => (showForm ? reset() : setShowForm(true))} className="w-full sm:w-auto min-h-[44px] cursor-pointer">
           {showForm ? "Cancel" : "＋ Add Activity"}
@@ -127,7 +168,30 @@ export default function ECAPage() {
               <Label>Skills (comma separated)</Label>
               <Input value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="Leadership, Public Speaking" className="mt-1.5" />
             </div>
-            <Button type="submit" className="w-full sm:w-auto cursor-pointer">{editing ? "Update" : "Create"} activity</Button>
+
+            <div>
+              <Label>Images (optional, max 5)</Label>
+              <div className="mt-1.5">
+                {images.length > 0 && (
+                  <div className="mb-3">
+                    <ImageSlider images={images} onRemove={(idx) => setImages(images.filter((_, i) => i !== idx))} editable />
+                  </div>
+                )}
+                <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
+                <div className="flex items-center gap-2">
+                  <Button type="button" variant="secondary" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading || images.length >= 5} className="cursor-pointer">
+                    {uploading ? <><Loader2 size={14} className="mr-1 animate-spin" /> Uploading...</> : <><Upload size={14} className="mr-1" /> Upload images</>}
+                  </Button>
+                  <span className="text-xs text-[#8a8a94]">{images.length}/5 • JPEG/PNG/WebP</span>
+                </div>
+                {images.length >= 5 && <p className="text-xs text-amber-600 mt-1">Max 5 images reached. Remove one to add more.</p>}
+              </div>
+            </div>
+
+            <Button type="submit" disabled={saving} className="w-full sm:w-auto cursor-pointer min-h-[44px]">
+              {saving && <Loader2 size={14} className="mr-2 animate-spin" />}
+              {saving ? (editing ? "Updating..." : "Creating...") : editing ? "Update activity" : "Create activity"}
+            </Button>
           </form>
         </Card>
       )}
@@ -137,26 +201,37 @@ export default function ECAPage() {
       ) : (
         <div className="grid lg:grid-cols-2 gap-4">
           {items.map((a) => (
-            <Card key={a.id} className="p-5">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-xs font-medium text-[#8a8a94] tracking-wide uppercase">{a.category ?? "ECA"}</p>
-                  <h3 className="font-semibold text-sm mt-1 leading-tight">{a.activityName}</h3>
-                  <p className="text-xs text-[#6b6b76] mt-1">{[a.role, a.organization].filter(Boolean).join(" • ")}</p>
+            <Card key={a.id} className="overflow-hidden">
+              {(a as any).images && (a as any).images.length > 0 ? (
+                <div className="p-3">
+                  <ImageSlider images={(a as any).images} />
                 </div>
-                <Badge>Public</Badge>
-              </div>
-              {a.description && <p className="text-sm text-[#4a4a52] mt-3 leading-5">{a.description}</p>}
-              {a.skills && a.skills.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {a.skills.map((s) => (
-                    <Badge key={s}>{s}</Badge>
-                  ))}
+              ) : (
+                <div className="h-24 bg-[#f8f8f9] border-b border-[#e8e8ea] flex items-center justify-center text-[#8a8a94] gap-2">
+                  <ImageIcon size={16} /> <span className="text-xs">No images</span>
                 </div>
               )}
-              <div className="mt-4 flex gap-2">
-                <button onClick={() => handleEdit(a)} className="text-xs font-medium border border-[#e8e8ea] rounded-full px-3 py-1.5 hover:bg-[#f8f8f9] cursor-pointer flex-1">Edit</button>
-                <button onClick={() => handleDelete(a.id)} className="text-xs font-medium border border-red-200 text-red-600 rounded-full px-3 py-1.5 hover:bg-red-50 cursor-pointer flex-1">Delete</button>
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-medium text-[#8a8a94] tracking-wide uppercase">{a.category ?? "ECA"}</p>
+                    <h3 className="font-semibold text-sm mt-1 leading-tight">{a.activityName}</h3>
+                    <p className="text-xs text-[#6b6b76] mt-1">{[a.role, a.organization].filter(Boolean).join(" • ")}</p>
+                  </div>
+                  <Badge>Public</Badge>
+                </div>
+                {a.description && <p className="text-sm text-[#4a4a52] mt-3 leading-5">{a.description}</p>}
+                {a.skills && a.skills.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {a.skills.map((s) => (
+                      <Badge key={s}>{s}</Badge>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-4 flex gap-2">
+                  <button onClick={() => handleEdit(a)} className="text-xs font-medium border border-[#e8e8ea] rounded-full px-3 py-1.5 hover:bg-[#f8f8f9] cursor-pointer flex-1">Edit</button>
+                  <button onClick={() => handleDelete(a.id)} className="text-xs font-medium border border-red-200 text-red-600 rounded-full px-3 py-1.5 hover:bg-red-50 cursor-pointer flex-1">Delete</button>
+                </div>
               </div>
             </Card>
           ))}

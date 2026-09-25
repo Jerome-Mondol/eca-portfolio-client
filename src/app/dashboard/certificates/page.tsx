@@ -6,8 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input, Label } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DatePicker } from "@/components/ui/date-picker";
 import { useToast } from "@/components/ui/toast";
 import { listCertificatesApi, createCertificateApi, updateCertificateApi, deleteCertificateApi, type Certificate } from "@/lib/api";
+import { getImageUrl } from "@/lib/upload";
+import { FileUploadCard } from "@/components/ui/file-upload";
+import { Loader2, FileText } from "lucide-react";
 
 export default function CertificatesPage() {
   const { success, error: toastError } = useToast();
@@ -21,6 +25,8 @@ export default function CertificatesPage() {
   const [credentialId, setCredentialId] = useState("");
   const [credentialUrl, setCredentialUrl] = useState("");
   const [skills, setSkills] = useState("");
+  const [documentKey, setDocumentKey] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const fetchList = async () => {
     try {
@@ -34,11 +40,12 @@ export default function CertificatesPage() {
   };
   useEffect(() => { fetchList(); }, []);
 
-  const reset = () => { setName(""); setOrg(""); setIssueDate(""); setCredentialId(""); setCredentialUrl(""); setSkills(""); setEditing(null); setShowForm(false); };
+  const reset = () => { setName(""); setOrg(""); setIssueDate(""); setCredentialId(""); setCredentialUrl(""); setSkills(""); setDocumentKey(null); setEditing(null); setShowForm(false); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) { toastError("Name required"); return; }
+    setSaving(true);
     const payload: any = {
       name: name.trim(),
       organization: org.trim() || null,
@@ -46,6 +53,7 @@ export default function CertificatesPage() {
       credentialId: credentialId.trim() || null,
       credentialUrl: credentialUrl.trim() || null,
       skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
+      documentKey: documentKey || null,
     };
     try {
       if (editing) {
@@ -60,6 +68,8 @@ export default function CertificatesPage() {
       reset();
     } catch (err: any) {
       toastError("Save failed", err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -71,6 +81,7 @@ export default function CertificatesPage() {
     setCredentialId(c.credentialId ?? "");
     setCredentialUrl(c.credentialUrl ?? "");
     setSkills((c.skills ?? []).join(", "));
+    setDocumentKey((c as any).documentKey ?? null);
     setShowForm(true);
   };
   const handleDelete = async (id: string) => {
@@ -84,6 +95,8 @@ export default function CertificatesPage() {
     }
   };
 
+  const isPdf = (url: string | null) => url?.toLowerCase().endsWith(".pdf") || url?.includes("application/pdf");
+
   if (loading) return <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"><Skeleton className="h-40" /><Skeleton className="h-40" /></div>;
 
   return (
@@ -91,7 +104,7 @@ export default function CertificatesPage() {
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Certificates</h1>
-          <p className="text-sm text-[#6b6b76]">Upload PDF or image. AI extracts, you approve.</p>
+          <p className="text-sm text-[#6b6b76]">Showcase with image or PDF for portfolio.</p>
         </div>
         <Button onClick={() => (showForm ? reset() : setShowForm(true))} className="w-full sm:w-auto min-h-[44px] cursor-pointer">
           {showForm ? "Cancel" : "＋ Add Certificate"}
@@ -111,39 +124,61 @@ export default function CertificatesPage() {
                 <Input value={org} onChange={(e) => setOrg(e.target.value)} placeholder="Programming Hero" className="mt-1.5" />
               </div>
               <div>
-                <Label>Issue date</Label>
-                <Input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="mt-1.5" />
+                <DatePicker value={issueDate} onChange={setIssueDate} label="Issue date" placeholder="Pick issue date" />
               </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
-                <Label>Credential ID</Label>
+                <Label>Credential ID <span className="text-[#8a8a94] font-normal">(optional)</span></Label>
                 <Input value={credentialId} onChange={(e) => setCredentialId(e.target.value)} placeholder="PH-123" className="mt-1.5" />
+                <p className="text-xs text-[#8a8a94] mt-1">Leave blank if none.</p>
               </div>
               <div>
                 <Label>Credential URL</Label>
                 <Input value={credentialUrl} onChange={(e) => setCredentialUrl(e.target.value)} placeholder="https://..." className="mt-1.5" />
               </div>
             </div>
+
+            <FileUploadCard value={documentKey} onChange={setDocumentKey} title="Upload certificate image or PDF" subtitle="Will be shown in your public portfolio." />
+
             <div>
               <Label>Skills (comma separated)</Label>
               <Input value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="React, Node.js" className="mt-1.5" />
             </div>
-            <Button type="submit" className="w-full sm:w-auto cursor-pointer">{editing ? "Update" : "Create"} certificate</Button>
+            <Button type="submit" disabled={saving} className="w-full sm:w-auto cursor-pointer min-h-[44px]">
+              {saving && <Loader2 size={14} className="mr-2 animate-spin" />}
+              {saving ? (editing ? "Updating..." : "Creating...") : editing ? "Update certificate" : "Create certificate"}
+            </Button>
           </form>
         </Card>
       )}
 
       {items.length === 0 ? (
-        <EmptyState title="No certificates yet" description="Upload a certificate and AI can extract details." actionLabel="Add certificate" onAction={() => setShowForm(true)} />
+        <EmptyState title="No certificates yet" description="Upload an image or PDF to showcase in your portfolio." actionLabel="Add certificate" onAction={() => setShowForm(true)} />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {items.map((c) => (
             <Card key={c.id} className="overflow-hidden">
+              {(c as any).documentKey ? (
+                isPdf((c as any).documentKey) ? (
+                  <div className="h-32 bg-[#f8f8f9] border-b border-[#e8e8ea] flex flex-col items-center justify-center gap-1 p-3">
+                    <FileText size={20} className="text-[#6b6b76]" />
+                    <p className="text-xs text-[#6b6b76] truncate max-w-[180px]">{(c as any).documentKey.split("/").pop()}</p>
+                    <a href={getImageUrl((c as any).documentKey)} target="_blank" className="text-xs bg-white border border-[#e8e8ea] rounded-full px-2 py-1 hover:bg-[#f3f3f5] cursor-pointer">View PDF</a>
+                  </div>
+                ) : (
+                  <img src={getImageUrl((c as any).documentKey)} alt={c.name} className="h-32 w-full object-cover" />
+                )
+              ) : (
+                <div className="h-32 bg-[#f8f8f9] border-b border-[#e8e8ea] flex items-center justify-center">
+                  <span className="text-xs text-[#8a8a94]">No file</span>
+                </div>
+              )}
               <div className="p-4">
                 <p className="text-xs font-semibold tracking-wide text-[#8a8a94]">CERTIFICATE</p>
                 <h3 className="font-semibold text-sm mt-2">{c.name}</h3>
-                <p className="text-xs text-[#6b6b76]">{c.organization ?? "—"} • {c.issueDate ?? ""}</p>
+                <p className="text-xs text-[#6b6b76]">{c.organization ?? "—"} • {c.issueDate ? new Date(c.issueDate + "T12:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : ""}</p>
+                {c.credentialId && <p className="text-xs text-[#8a8a94] mt-1">ID: {c.credentialId}</p>}
                 {c.skills && c.skills.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {c.skills.map((s) => (

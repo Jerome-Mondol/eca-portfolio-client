@@ -4,45 +4,35 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { ArrowUpRight, Eye, FolderKanban, Award, Briefcase, Trophy, Sparkles, Plus } from "lucide-react";
+import { ArrowUpRight, FolderKanban, Award, Briefcase, Trophy } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { getProfileApi, listProjectsApi, listCertificatesApi, listActivitiesApi, listCoursesApi } from "@/lib/api";
+import { getDashboardSummaryApi, type DashboardSummary } from "@/lib/api";
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ projects: 0, certificates: 0, activities: 0, courses: 0, profileDone: false, hasPhoto: false });
-  const [featured, setFeatured] = useState(0);
 
   useEffect(() => {
     let mounted = true;
-    Promise.allSettled([getProfileApi().catch(() => null), listProjectsApi().catch(() => ({ data: [] })), listCertificatesApi().catch(() => ({ data: [] })), listActivitiesApi().catch(() => ({ data: [] })), listCoursesApi().catch(() => ({ data: [] }))]).then(
-      ([profileRes, projRes, certRes, actRes, courseRes]) => {
+    // Use cached dashboard summary — near instant on second visit (30s cache + server Redis HIT)
+    getDashboardSummaryApi()
+      .then((data) => {
         if (!mounted) return;
-        const profile: any = (profileRes as any)?.value?.profile;
-        const projects: any[] = (projRes as any)?.value?.data ?? [];
-        const certs: any[] = (certRes as any)?.value?.data ?? [];
-        const acts: any[] = (actRes as any)?.value?.data ?? [];
-        const courses: any[] = (courseRes as any)?.value?.data ?? [];
-        const profileDone = !!(profile?.headline || profile?.bio || profile?.location);
-        const hasPhoto = !!profile?.avatarKey;
-        setStats({ projects: projects.length, certificates: certs.length, activities: acts.length, courses: courses.length, profileDone, hasPhoto });
-        setFeatured(projects.filter((p: any) => p.featured).length);
-        setLoading(false);
-      }
-    );
+        setSummary(data);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
     return () => { mounted = false; };
   }, []);
 
-  const completion = (() => {
-    // 6 steps: profile, projects, certificates, activities, courses, photo
-    const steps = [stats.profileDone, stats.projects > 0, stats.certificates > 0, stats.activities > 0, stats.courses > 0, stats.hasPhoto];
-    const done = steps.filter(Boolean).length;
-    return Math.round((done / steps.length) * 100);
-  })();
+  const completion = summary?.completion ?? 0;
+  const stats = summary ?? { projects: 0, certificates: 0, activities: 0, courses: 0, experiences: 0, achievements: 0, skills: 0, documents: 0, featured: 0, profileDone: false, hasPhoto: false };
 
   const nextSteps = [
-    { label: "Add profile photo", href: "/dashboard/profile", done: stats.hasPhoto },
+    { label: "Add profile photo", href: "/dashboard/profile", done: !!stats.hasPhoto },
     { label: "Add project", href: "/dashboard/projects", done: stats.projects > 0 },
     { label: "Add certificate", href: "/dashboard/certificates", done: stats.certificates > 0 },
     { label: "Add ECA", href: "/dashboard/eca", done: stats.activities > 0 },
@@ -117,7 +107,7 @@ export default function DashboardPage() {
           <Card className="p-3 sm:p-4 min-w-0">
             <p className="text-xs text-[#8a8a94] font-medium flex items-center gap-1 truncate"><FolderKanban size={14} className="shrink-0" /> Projects</p>
             <p className="text-xl sm:text-2xl font-semibold mt-2">{stats.projects}</p>
-            <p className="text-xs text-[#6b6b76] mt-1">{featured} featured</p>
+            <p className="text-xs text-[#6b6b76] mt-1">{stats.featured} featured</p>
           </Card>
           <Card className="p-3 sm:p-4 min-w-0">
             <p className="text-xs text-[#8a8a94] font-medium flex items-center gap-1 truncate"><Award size={14} className="shrink-0" /> Certificates</p>
@@ -143,7 +133,7 @@ export default function DashboardPage() {
           { k: "Projects", v: stats.projects },
           { k: "Certificates", v: stats.certificates },
           { k: "Courses", v: stats.courses },
-          { k: "Featured", v: featured },
+          { k: "Featured", v: stats.featured },
           { k: "Complete", v: `${completion}%` },
         ].map((s) => (
           <Card key={s.k} className="p-3 text-center">
@@ -152,23 +142,6 @@ export default function DashboardPage() {
           </Card>
         ))}
       </div>
-
-      <Card className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <p className="text-sm font-semibold">Quick add</p>
-        <div className="flex gap-2 flex-wrap">
-          <Link href="/dashboard/projects" className="cursor-pointer"><Button size="sm"><Plus size={14} className="mr-1" /> Project</Button></Link>
-          <Link href="/dashboard/certificates" className="cursor-pointer"><Button variant="secondary" size="sm">Certificate</Button></Link>
-          <Link href="/dashboard/eca" className="cursor-pointer"><Button variant="secondary" size="sm">ECA</Button></Link>
-          <Link href="/dashboard/courses" className="cursor-pointer"><Button variant="secondary" size="sm">Course</Button></Link>
-        </div>
-      </Card>
-
-      {completion < 100 && (
-        <Card className="p-3 border-[#e8e8ea] bg-[#f8f8f9]">
-          <p className="text-xs font-medium">Tip</p>
-          <p className="text-sm text-[#6b6b76] mt-1">ECA leads your educational story. Add one activity and one certificate to reach 50% instantly.</p>
-        </Card>
-      )}
     </div>
   );
 }
