@@ -24,7 +24,6 @@ export default function AIPage() {
           { id: "certificate", label: "Analyze a certificate" },
           { id: "project", label: "Improve a project description" },
           { id: "bio", label: "Organize my portfolio" },
-          { id: "insights", label: "Find missing information" },
         ].map((t) => (
           <button
             key={t.id}
@@ -118,16 +117,6 @@ export default function AIPage() {
               <Button size="sm">Accept</Button><Button size="sm" variant="secondary">Edit</Button><Button size="sm" variant="ghost">Regenerate</Button>
             </div>
           </div>
-        </Card>
-      )}
-
-      {active === "insights" && (
-        <Card className="p-5">
-          <h3 className="font-semibold text-sm">Find missing information</h3>
-          <ul className="mt-3 space-y-2 text-sm">
-            <li className="flex gap-2"><span className="text-amber-600">•</span> You have several technical projects but limited info about leadership/volunteering.</li>
-            <li className="flex gap-2"><span className="text-emerald-600">•</span> Suggested next step: Document your role in the university programming club.</li>
-          </ul>
         </Card>
       )}
     </div>

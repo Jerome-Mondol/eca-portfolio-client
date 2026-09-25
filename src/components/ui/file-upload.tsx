@@ -137,11 +137,10 @@ export function FileUploadCard({
       }}
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
-      className={`group relative rounded-2xl border-2 border-dashed transition-all cursor-pointer overflow-hidden ${
-        dragOver
+      className={`group relative rounded-2xl border-2 border-dashed transition-all cursor-pointer overflow-hidden ${dragOver
           ? "border-[#111827] bg-[#f3f3f5] shadow-md"
           : "border-[#d0d0d6] bg-[#fcfcfd] hover:bg-white hover:border-[#111827]/20 hover:shadow-[0_4px_16px_rgba(0,0,0,0.04)]"
-      }`}
+        }`}
     >
       <input
         ref={fileRef}

@@ -75,7 +75,7 @@ export default function CertificatesPage() {
             mimeType: documentKey.endsWith(".pdf") ? "application/pdf" : "image/jpeg",
             category: "Certificates",
           });
-        } catch {}
+        } catch { }
       }
       reset();
     } catch (err: any) {

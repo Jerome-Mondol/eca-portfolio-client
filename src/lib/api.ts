@@ -28,7 +28,7 @@ function setCached(path: string, auth: boolean | undefined, data: any, ttlMs = 6
     if (typeof window !== "undefined" && ttlMs > 0) {
       localStorage.setItem(`cache:${k}`, JSON.stringify({ data, expires: Date.now() + ttlMs }));
     }
-  } catch {}
+  } catch { }
 }
 export function clearApiCache(pathPrefix?: string) {
   if (!pathPrefix) { memCache.clear(); return; }
@@ -50,7 +50,7 @@ if (typeof window !== "undefined") {
         }
       }
     }
-  } catch {}
+  } catch { }
 }
 
 function getAccessToken(): string | null {
@@ -110,7 +110,7 @@ export async function apiFetch(path: string, opts: ApiOptions = {}, isRetry = fa
     if (stale) {
       setTimeout(() => {
         if (_isLoggingOut) return; // skip background refetch during logout
-        apiFetch(path, { ...opts, cache: "no-store" }, true).catch(() => {});
+        apiFetch(path, { ...opts, cache: "no-store" }, true).catch(() => { });
       }, 0);
       return stale;
     }
@@ -239,7 +239,7 @@ export async function logoutApi() {
       body: JSON.stringify({ refreshToken }),
       credentials: "include",
     });
-  } catch {}
+  } catch { }
   handleGlobalLogout();
 }
 
@@ -435,17 +435,17 @@ export async function getPublicPortfolioApi(username: string) {
 
 // Prefetch helper — fire-and-forget, warms cache for instant navigation
 export function prefetchDashboard() {
-  getDashboardSummaryApi().catch(() => {});
-  getProfileApi().catch(() => {});
+  getDashboardSummaryApi().catch(() => { });
+  getProfileApi().catch(() => { });
 }
 export function prefetchAll() {
   prefetchDashboard();
-  listProjectsApi().catch(() => {});
-  listActivitiesApi().catch(() => {});
-  listCertificatesApi().catch(() => {});
-  listCoursesApi().catch(() => {});
-  listExperiencesApi().catch(() => {});
-  listAchievementsApi().catch(() => {});
-  listSkillsApi().catch(() => {});
-  listDocumentsApi().catch(() => {});
+  listProjectsApi().catch(() => { });
+  listActivitiesApi().catch(() => { });
+  listCertificatesApi().catch(() => { });
+  listCoursesApi().catch(() => { });
+  listExperiencesApi().catch(() => { });
+  listAchievementsApi().catch(() => { });
+  listSkillsApi().catch(() => { });
+  listDocumentsApi().catch(() => { });
 }
