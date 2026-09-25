@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/components/ui/toast";
+import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,12 +27,14 @@ export const viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-[#fdfdfc] text-[#1a1a1e]">
         <AuthProvider>
-          <ToastProvider>{children}</ToastProvider>
+          <ConfirmProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </ConfirmProvider>
         </AuthProvider>
       </body>
     </html>

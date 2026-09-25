@@ -9,8 +9,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectOption } from "@/components/ui/select";
-import { Loader2, Briefcase, GraduationCap, Palette, Users, Sparkles, BookOpen, HeartHandshake } from "lucide-react";
 import { listExperiencesApi, createExperienceApi, updateExperienceApi, deleteExperienceApi, type Experience } from "@/lib/api";
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import { Briefcase, GraduationCap, BookOpen, Sparkles, Palette, Users, HeartHandshake, Loader2, Plus, Pencil, Trash2 } from "lucide-react";
 
 const EXPERIENCE_CATEGORIES: SelectOption[] = [
   { value: "Job / Work Experience", label: "Job / Work Experience", icon: <Briefcase size={16} /> },
@@ -24,6 +25,7 @@ const EXPERIENCE_CATEGORIES: SelectOption[] = [
 
 export default function ExperiencePage() {
   const { success, error: toastError } = useToast();
+  const { confirm: confirmModal } = useConfirm();
   const [items, setItems] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -112,8 +114,14 @@ export default function ExperiencePage() {
     setSkills((ex.skills ?? []).join(", "));
     setShowForm(true);
   };
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete?")) return;
+  const handleDelete = async (id: string, itemTitle?: string) => {
+    const isConfirmed = await confirmModal({
+      title: "Delete Experience",
+      description: `Are you sure you want to delete ${itemTitle ? `"${itemTitle}"` : "this experience"}?`,
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!isConfirmed) return;
     setDeletingId(id);
     try {
       await deleteExperienceApi(id);

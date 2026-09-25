@@ -8,11 +8,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useToast } from "@/components/ui/toast";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Select, SelectOption } from "@/components/ui/select";
 import { listCoursesApi, createCourseApi, updateCourseApi, deleteCourseApi, listCertificatesApi, type Course, type Certificate } from "@/lib/api";
 
 export default function CoursesPage() {
   const { success, error: toastError } = useToast();
+  const { confirm: confirmModal } = useConfirm();
   const [items, setItems] = useState<Course[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +90,13 @@ export default function CoursesPage() {
     setShowForm(true);
   };
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete?")) return;
+    const isConfirmed = await confirmModal({
+      title: "Delete Course",
+      description: "Are you sure you want to delete this course?",
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!isConfirmed) return;
     try {
       await deleteCourseApi(id);
       setItems((v) => v.filter((x) => x.id !== id));

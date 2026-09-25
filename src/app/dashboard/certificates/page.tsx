@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useToast } from "@/components/ui/toast";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { listCertificatesApi, createCertificateApi, updateCertificateApi, deleteCertificateApi, createDocumentApi, type Certificate } from "@/lib/api";
 import { getImageUrl } from "@/lib/upload";
 import { FileUploadCard } from "@/components/ui/file-upload";
@@ -15,6 +16,7 @@ import { Loader2, FileText } from "lucide-react";
 
 export default function CertificatesPage() {
   const { success, error: toastError } = useToast();
+  const { confirm: confirmModal } = useConfirm();
   const [items, setItems] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -97,7 +99,13 @@ export default function CertificatesPage() {
     setShowForm(true);
   };
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete?")) return;
+    const isConfirmed = await confirmModal({
+      title: "Delete Certificate",
+      description: "Are you sure you want to delete this certificate?",
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!isConfirmed) return;
     try {
       await deleteCertificateApi(id);
       setItems((v) => v.filter((x) => x.id !== id));

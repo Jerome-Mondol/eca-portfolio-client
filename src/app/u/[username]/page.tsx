@@ -108,7 +108,7 @@ export default function PublicPortfolioPage() {
         <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-6 sm:gap-8 items-start">
           <div className="text-center lg:text-left min-w-0">
             <div className="flex justify-center lg:justify-start">
-              <img src={avatarSrc} alt={user.fullName} className="h-24 w-24 sm:h-28 sm:w-28 rounded-[24px] border border-[#e8e8ea] shadow-sm object-cover bg-white" width={112} height={112} />
+              <img src={avatarSrc} alt={user.fullName} className="h-32 w-32 sm:h-36 sm:w-36 rounded-[28px] border border-[#e8e8ea] shadow-md object-cover bg-white" width={144} height={144} />
             </div>
             <h1 className="mt-4 text-[26px] sm:text-[32px] font-semibold tracking-tight break-words">{user.fullName}</h1>
             <p className="text-sm text-[#111827] font-medium break-words">{profile?.headline ?? "Student"}</p>

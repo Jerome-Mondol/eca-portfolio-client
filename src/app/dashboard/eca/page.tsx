@@ -7,6 +7,7 @@ import { Input, Label, Textarea } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { listActivitiesApi, createActivityApi, updateActivityApi, deleteActivityApi, type Activity } from "@/lib/api";
 import { uploadImage } from "@/lib/upload";
 import { ImageSlider, ImageGridPreview } from "@/components/ui/image-slider";
@@ -15,6 +16,7 @@ import { Upload, Loader2, X, Image as ImageIcon } from "lucide-react";
 
 export default function ECAPage() {
   const { success, error: toastError } = useToast();
+  const { confirm: confirmModal } = useConfirm();
   const [items, setItems] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -116,7 +118,13 @@ export default function ECAPage() {
     setShowForm(true);
   };
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete?")) return;
+    const isConfirmed = await confirmModal({
+      title: "Delete Activity",
+      description: "Are you sure you want to delete this ECA activity?",
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!isConfirmed) return;
     try {
       await deleteActivityApi(id);
       setItems((v) => v.filter((x) => x.id !== id));

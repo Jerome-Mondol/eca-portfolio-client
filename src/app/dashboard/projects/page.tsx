@@ -13,6 +13,8 @@ import { FileUploadCard } from "@/components/ui/file-upload";
 import { Select, SelectOption } from "@/components/ui/select";
 import { Trash2, Plus, Globe, Code2, Link2, Bird, Users, Camera, Video, Palette, FileText, GraduationCap } from "lucide-react";
 
+import { useConfirm } from "@/components/ui/confirm-dialog";
+
 const platformOptions = ["GitHub", "LinkedIn", "Website", "Twitter", "Facebook", "Instagram", "YouTube", "Behance", "Dribbble", "Other"];
 
 const getIcon = (platform: string, size = 12) => {
@@ -30,6 +32,7 @@ const getIcon = (platform: string, size = 12) => {
 
 export default function ProjectsPage() {
   const { success, error: toastError } = useToast();
+  const { confirm } = useConfirm();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -121,12 +124,18 @@ export default function ProjectsPage() {
     setShowForm(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this project?")) return;
+  const handleDelete = async (id: string, projectTitle: string) => {
+    const isConfirmed = await confirm({
+      title: "Delete Project",
+      description: `Are you sure you want to delete "${projectTitle}"? This action cannot be undone.`,
+      confirmText: "Delete Project",
+      variant: "danger",
+    });
+    if (!isConfirmed) return;
     try {
       await deleteProjectApi(id);
       setProjects((p) => p.filter((x) => x.id !== id));
-      success("Deleted");
+      success("Project deleted");
     } catch (e: any) {
       toastError("Delete failed", e.message);
     }
@@ -245,7 +254,7 @@ export default function ProjectsPage() {
               </div>
               <div className="p-3 border-t border-[#f0f0f2] flex gap-2">
                 <button onClick={() => handleEdit(p)} className="text-xs font-medium border border-[#e8e8ea] rounded-full px-3 py-1.5 hover:bg-[#f8f8f9] cursor-pointer flex-1">Edit</button>
-                <button onClick={() => handleDelete(p.id)} className="text-xs font-medium border border-red-200 text-red-600 rounded-full px-3 py-1.5 hover:bg-red-50 cursor-pointer flex-1">Delete</button>
+                <button onClick={() => handleDelete(p.id, p.title)} className="text-xs font-medium border border-red-200 text-red-600 rounded-full px-3 py-1.5 hover:bg-red-50 cursor-pointer flex-1">Delete</button>
               </div>
             </Card>
           ))}

@@ -30,6 +30,7 @@ export default function ProfilePage() {
   const [newPlatform, setNewPlatform] = useState("GitHub");
   const [newUrl, setNewUrl] = useState("");
   const [newCustomPlatform, setNewCustomPlatform] = useState("");
+  const [newInterestInput, setNewInterestInput] = useState("");
   const [copied, setCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -138,17 +139,30 @@ export default function ProfilePage() {
 
   const addSocial = () => {
     const platform = newPlatform === "Other" ? newCustomPlatform.trim() : newPlatform;
-    const url = newUrl.trim();
+    let url = newUrl.trim();
     if (!platform || !url) {
-      toastError("Add social", "Platform and URL required");
+      toastError("Add social", "Platform and link/username required");
       return;
     }
-    // basic URL validation
-    if (!url.includes(".")) {
-      toastError("Invalid URL", "Include domain, e.g. example.com/you");
-      return;
+    // Auto format URL if missing scheme/domain
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      if (url.includes(".")) {
+        url = `https://${url}`;
+      } else {
+        // User entered a username/handle (e.g. "jerome" or "@jerome")
+        const handle = url.replace(/^@/, "");
+        const p = platform.toLowerCase();
+        if (p.includes("github")) url = `https://github.com/${handle}`;
+        else if (p.includes("linkedin")) url = `https://linkedin.com/in/${handle}`;
+        else if (p.includes("twitter") || p.includes("x")) url = `https://x.com/${handle}`;
+        else if (p.includes("instagram")) url = `https://instagram.com/${handle}`;
+        else if (p.includes("facebook")) url = `https://facebook.com/${handle}`;
+        else if (p.includes("behance")) url = `https://behance.net/${handle}`;
+        else if (p.includes("dribbble")) url = `https://dribbble.com/${handle}`;
+        else url = `https://${handle}.com`;
+      }
     }
-    setSocials([...socials, { platform, url }]);
+    setSocials((prev) => [...prev, { platform, url }]);
     setNewUrl("");
     setNewCustomPlatform("");
     success("Social added", `${platform}`);
@@ -216,7 +230,7 @@ export default function ProfilePage() {
           <Card className="p-5">
             <div className="flex flex-col items-center text-center">
               <div className="relative group">
-                <img src={avatarSrc} alt="avatar" className="h-24 w-24 rounded-2xl border border-[#e8e8ea] bg-white object-cover" />
+                <img src={avatarSrc} alt="avatar" className="h-32 w-32 sm:h-36 sm:w-36 rounded-2xl border border-[#e8e8ea] bg-white object-cover shadow-sm" />
                 <button
                   onClick={() => fileRef.current?.click()}
                   disabled={uploading}
@@ -394,28 +408,40 @@ export default function ProfilePage() {
             {newPlatform === "Other" && (
               <Input value={newCustomPlatform} onChange={(e) => setNewCustomPlatform(e.target.value)} placeholder="Custom platform name (e.g. ArtStation)" className="" />
             )}
-            <Button variant="secondary" size="sm" className="w-full sm:w-auto cursor-pointer" onClick={addSocial}>
+            <Button type="button" variant="secondary" size="sm" className="w-full sm:w-auto cursor-pointer" onClick={addSocial}>
               <Plus size={14} className="mr-1" /> Add social
             </Button>
 
             <div className="pt-2 border-t border-[#f0f0f2]">
-              <p className="text-xs font-medium mb-2">Interests</p>
-              <div className="flex flex-wrap gap-1.5">
+              <p className="text-xs font-medium mb-2">Interests & Topics</p>
+              <div className="flex flex-wrap gap-1.5 mb-3">
                 {interests.map((i) => (
-                  <Badge key={i} className="cursor-pointer" onClick={() => setInterests(interests.filter((x) => x !== i))}>
+                  <Badge key={i} className="cursor-pointer hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition" onClick={() => setInterests(interests.filter((x) => x !== i))}>
                     {i} ✕
                   </Badge>
                 ))}
-                <button
-                  onClick={() => {
-                    const v = prompt("Add interest");
-                    if (v) setInterests([...interests, v]);
-                  }}
-                  className="text-xs border border-dashed border-[#d0d0d6] rounded-full px-3 py-1.5 text-[#6b6b76] cursor-pointer hover:bg-[#f8f8f9]"
-                >
-                  + Add
-                </button>
               </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const trimmed = newInterestInput.trim();
+                  if (trimmed && !interests.includes(trimmed)) {
+                    setInterests([...interests, trimmed]);
+                    setNewInterestInput("");
+                  }
+                }}
+                className="flex items-center gap-2"
+              >
+                <Input
+                  value={newInterestInput}
+                  onChange={(e) => setNewInterestInput(e.target.value)}
+                  placeholder="e.g. Machine Learning, UI Design, Robotics"
+                  className="h-9 text-xs"
+                />
+                <Button type="submit" variant="secondary" size="sm" className="h-9 cursor-pointer shrink-0">
+                  <Plus size={14} className="mr-1" /> Add
+                </Button>
+              </form>
             </div>
           </Card>
         </div>

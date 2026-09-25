@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Select, SelectOption } from "@/components/ui/select";
 import { FileUploadCard } from "@/components/ui/file-upload";
 import { getImageUrl } from "@/lib/upload";
@@ -52,6 +53,7 @@ export interface UnifiedDocument {
 
 export default function DocumentsPage() {
   const { success, error: toastError } = useToast();
+  const { confirm: confirmModal } = useConfirm();
   const [items, setItems] = useState<UnifiedDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -74,8 +76,8 @@ export default function DocumentsPage() {
       const list: UnifiedDocument[] = [];
 
       // Manual / Direct Upload Documents
-      docsRes.data.forEach((d: Document) => {
-        const fileUrl = d.storageKey || d.filename;
+      docsRes.data.forEach((d: any) => {
+        const fileUrl = d.storageKey || d.fileKey || d.filename || "";
         list.push({
           id: d.id,
           filename: d.filename || d.originalName || "Document",
@@ -194,7 +196,13 @@ export default function DocumentsPage() {
       toastError("Cannot delete auto-synced files here", `Remove it directly from the ${doc.source} section.`);
       return;
     }
-    if (!confirm("Delete this document from library?")) return;
+    const isConfirmed = await confirmModal({
+      title: "Delete Document",
+      description: "Are you sure you want to delete this document from your library?",
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!isConfirmed) return;
     setDeletingId(doc.id);
     try {
       await deleteDocumentApi(doc.id);
