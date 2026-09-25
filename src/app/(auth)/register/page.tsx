@@ -3,14 +3,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/toast";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register } = useAuth();
+  const { register, user, loading: authLoading } = useAuth();
   const { success, error: toastError } = useToast();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -19,6 +19,13 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      const token = typeof window !== "undefined" ? localStorage.getItem("folio_access") : null;
+      if (token) router.replace("/dashboard");
+    }
+  }, [authLoading, user, router]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

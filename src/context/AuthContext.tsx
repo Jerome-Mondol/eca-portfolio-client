@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { loginApi, registerApi, logoutApi, meApi, type User } from "@/lib/api";
+import { loginApi, registerApi, logoutApi, meApi, handleGlobalLogout, isLoggingOut, type User } from "@/lib/api";
 
 type AuthState = {
   user: User | null;
@@ -20,32 +20,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const refreshUser = useCallback(async () => {
+    // Don't try to refresh if we're in the middle of logging out
+    if (isLoggingOut()) {
+      setUser(null);
+      return;
+    }
+    const token = typeof window !== "undefined" ? localStorage.getItem("folio_access") : null;
+    if (!token) {
+      setUser(null);
+      return;
+    }
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("folio_access") : null;
-      if (!token) {
-        setUser(null);
-        return;
-      }
       const data = await meApi();
       setUser(data.user);
       localStorage.setItem("folio_user", JSON.stringify(data.user));
     } catch {
-      // try refresh once
-      try {
-        const { refreshApi } = await import("@/lib/api");
-        await refreshApi();
-        const data = await meApi();
-        setUser(data.user);
-      } catch {
-        setUser(null);
-        localStorage.removeItem("folio_access");
-        localStorage.removeItem("folio_refresh");
-        localStorage.removeItem("folio_user");
-      }
+      // apiFetch already handles 401 -> handleGlobalLogout internally
+      // Just clear user state here, don't call handleGlobalLogout again
+      setUser(null);
     }
   }, []);
 
   useEffect(() => {
+    const handleLogoutEvent = () => {
+      setUser(null);
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("auth:logout", handleLogoutEvent);
+    }
     const cached = typeof window !== "undefined" ? localStorage.getItem("folio_user") : null;
     if (cached) {
       try {
@@ -53,6 +55,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch {}
     }
     refreshUser().finally(() => setLoading(false));
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("auth:logout", handleLogoutEvent);
+      }
+    };
   }, [refreshUser]);
 
   const login = async (email: string, password: string) => {

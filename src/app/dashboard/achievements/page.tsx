@@ -300,54 +300,70 @@ export default function AchievementsPage() {
       ) : (
         <div className="space-y-3">
           {items.map((a) => (
-            <Card key={a.id} className="p-5 flex flex-col justify-between space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold text-sm sm:text-[15px]">{a.title}</h3>
-                    {a.category && <Badge className="text-xs">{a.category}</Badge>}
+            <Card key={a.id} className="p-0 overflow-hidden">
+              <div className="flex flex-col sm:flex-row">
+                {/* Left — Image thumbnail */}
+                {a.images && a.images.length > 0 && (
+                  <div className="sm:w-[160px] md:w-[200px] shrink-0 bg-[#f5f5f7]">
+                    <div className="relative w-full h-[160px] sm:h-full">
+                      <img
+                        src={a.images[0]}
+                        alt={a.title}
+                        className="w-full h-full object-cover"
+                      />
+                      {a.images.length > 1 && (
+                        <span className="absolute bottom-2 right-2 bg-black/60 text-white text-[11px] font-medium px-2 py-0.5 rounded-full backdrop-blur-sm">
+                          +{a.images.length - 1} more
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-xs text-[#6b6b76]">
-                    {[
-                      a.organization,
-                      a.date
-                        ? new Date(a.date + "T12:00:00").toLocaleDateString("en-GB", {
-                            month: "short",
-                            year: "numeric",
-                          })
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" • ")}
-                  </p>
-                  {a.description && (
-                    <p className="text-sm text-[#4a4a52] leading-5 pt-1">{a.description}</p>
-                  )}
-                </div>
+                )}
 
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={() => handleEdit(a)}
-                    className="text-xs border border-[#e8e8ea] rounded-full px-3 py-1.5 cursor-pointer hover:bg-[#f8f8f9]"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(a.id)}
-                    disabled={deletingId === a.id}
-                    className="text-xs border border-red-200 text-red-600 rounded-full px-3 py-1.5 cursor-pointer hover:bg-red-50"
-                  >
-                    {deletingId === a.id ? "..." : "Delete"}
-                  </button>
+                {/* Right — Text content */}
+                <div className="flex-1 min-w-0 p-5 flex flex-col justify-between gap-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold text-sm sm:text-[15px]">{a.title}</h3>
+                        {a.category && <Badge className="text-xs">{a.category}</Badge>}
+                      </div>
+                      <p className="text-xs text-[#6b6b76]">
+                        {[
+                          a.organization,
+                          a.date
+                            ? new Date(a.date + "T12:00:00").toLocaleDateString("en-GB", {
+                                month: "short",
+                                year: "numeric",
+                              })
+                            : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" • ")}
+                      </p>
+                      {a.description && (
+                        <p className="text-sm text-[#4a4a52] leading-5 pt-1 line-clamp-3">{a.description}</p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => handleEdit(a)}
+                        className="text-xs border border-[#e8e8ea] rounded-full px-3 py-1.5 cursor-pointer hover:bg-[#f8f8f9]"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(a.id)}
+                        disabled={deletingId === a.id}
+                        className="text-xs border border-red-200 text-red-600 rounded-full px-3 py-1.5 cursor-pointer hover:bg-red-50"
+                      >
+                        {deletingId === a.id ? "..." : "Delete"}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              {/* Achievement Images Preview */}
-              {a.images && a.images.length > 0 && (
-                <div className="pt-2 border-t border-[#f0f0f2]">
-                  <ImageGridPreview images={a.images} />
-                </div>
-              )}
             </Card>
           ))}
         </div>

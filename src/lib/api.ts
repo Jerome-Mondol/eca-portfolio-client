@@ -63,30 +63,54 @@ function getRefreshToken(): string | null {
   return localStorage.getItem("folio_refresh");
 }
 
-export async function apiFetch(path: string, opts: ApiOptions = {}) {
+let _isLoggingOut = false;
+export function isLoggingOut() { return _isLoggingOut; }
+
+export function handleGlobalLogout() {
+  if (typeof window === "undefined") return;
+  // Prevent re-entrant calls from multiple concurrent 401s
+  if (_isLoggingOut) return;
+  _isLoggingOut = true;
+
+  localStorage.removeItem("folio_access");
+  localStorage.removeItem("folio_refresh");
+  localStorage.removeItem("folio_user");
+  clearApiCache();
+  // Cancel any pending refresh
+  refreshPromise = null;
+
+  window.dispatchEvent(new CustomEvent("auth:logout"));
+
+  // Use replace so back-button doesn't loop back to dashboard
+  if (window.location.pathname.startsWith("/dashboard") || window.location.pathname.startsWith("/onboarding")) {
+    window.location.replace("/login");
+  }
+
+  // Reset after a tick so future logins can work
+  setTimeout(() => { _isLoggingOut = false; }, 2000);
+}
+
+let refreshPromise: Promise<any> | null = null;
+
+export async function apiFetch(path: string, opts: ApiOptions = {}, isRetry = false): Promise<any> {
+  // If we're in the middle of logging out, reject immediately
+  if (_isLoggingOut) {
+    throw new Error("Session expired. Please log in again.");
+  }
+
   const isGet = !opts.method || opts.method === "GET";
   const useCache = isGet && opts.cache !== "no-store";
   const revalidateMs = (opts.revalidate ?? 60) * 1000;
 
-  if (useCache) {
+  if (useCache && !isRetry) {
     const cached = getCached(path, opts.auth);
     if (cached) return cached;
     // stale-while-revalidate: return stale instantly while revalidating in background
     const stale = getStale(path, opts.auth);
     if (stale) {
-      // background revalidate
       setTimeout(() => {
-        fetch(`${API_URL}${path}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...(opts.auth && getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {}),
-            ...(opts.headers as any),
-          },
-          credentials: "include",
-        })
-          .then((r) => r.text().then((t) => { try { const d = JSON.parse(t); if (r.ok) setCached(path, opts.auth, d, revalidateMs); } catch {} }))
-          .catch(() => {});
+        if (_isLoggingOut) return; // skip background refetch during logout
+        apiFetch(path, { ...opts, cache: "no-store" }, true).catch(() => {});
       }, 0);
       return stale;
     }
@@ -96,17 +120,49 @@ export async function apiFetch(path: string, opts: ApiOptions = {}) {
     "Content-Type": "application/json",
     ...(opts.headers as Record<string, string> | undefined),
   };
-  if (opts.auth) {
+  if (opts.auth || getAccessToken()) {
     const token = getAccessToken();
     if (token) headers["Authorization"] = `Bearer ${token}`;
   }
+
   const res = await fetch(`${API_URL}${path}`, {
     ...opts,
     headers,
     credentials: "include",
-    // Next cache hint for server components — also respected by our in-memory cache
     ...(opts.revalidate ? { next: { revalidate: opts.revalidate } as any } : {}),
   });
+
+  // If 401 Unauthorized on an authenticated endpoint and we haven't retried yet:
+  if (
+    res.status === 401 &&
+    !isRetry &&
+    !path.includes("/api/auth/login") &&
+    !path.includes("/api/auth/refresh")
+  ) {
+    // Already logging out — don't retry
+    if (_isLoggingOut) throw new Error("Session expired. Please log in again.");
+
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+      handleGlobalLogout();
+      throw new Error("Session expired. Please log in again.");
+    }
+
+    try {
+      if (!refreshPromise) {
+        refreshPromise = refreshApi().finally(() => {
+          refreshPromise = null;
+        });
+      }
+      await refreshPromise;
+      // Retry original request with newly issued access token
+      return await apiFetch(path, opts, true);
+    } catch {
+      handleGlobalLogout();
+      throw new Error("Session expired. Please log in again.");
+    }
+  }
+
   const text = await res.text();
   let data: any = null;
   try {
@@ -114,16 +170,20 @@ export async function apiFetch(path: string, opts: ApiOptions = {}) {
   } catch {
     data = text;
   }
+
   if (!res.ok) {
+    if (res.status === 401) {
+      handleGlobalLogout();
+    }
     const msg = data?.message ?? data ?? `Request failed ${res.status}`;
     throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
   }
+
   if (useCache) setCached(path, opts.auth, data, revalidateMs);
-  else if (!isGet) clearApiCache(path); // invalidate on mutation
+  else if (!isGet) clearApiCache(path);
 
   // Invalidate related caches on mutation
   if (!isGet) {
-    // clear all GET caches for this resource prefix
     const prefix = path.split("/").slice(0, 3).join("/");
     clearApiCache(prefix);
   }
@@ -136,7 +196,6 @@ export type User = { id: string; email: string; username: string; fullName: stri
 
 export async function registerApi(payload: { fullName: string; email: string; username: string; password: string; confirmPassword: string }) {
   const data = await apiFetch("/api/auth/register", { method: "POST", body: JSON.stringify(payload) });
-  // server sets httpOnly cookie + returns both tokens
   if (data.accessToken) localStorage.setItem("folio_access", data.accessToken);
   if (data.refreshToken) localStorage.setItem("folio_refresh", data.refreshToken);
   if (data.user) localStorage.setItem("folio_user", JSON.stringify(data.user));
@@ -153,8 +212,19 @@ export async function loginApi(payload: { email: string; password: string }) {
 
 export async function refreshApi() {
   const refreshToken = getRefreshToken();
-  const body = refreshToken ? JSON.stringify({ refreshToken }) : "{}";
-  const data = await apiFetch("/api/auth/refresh", { method: "POST", body });
+  if (!refreshToken) {
+    throw new Error("No refresh token");
+  }
+  const res = await fetch(`${API_URL}/api/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error("Refresh failed");
+  }
+  const data = await res.json();
   if (data.accessToken) localStorage.setItem("folio_access", data.accessToken);
   if (data.refreshToken) localStorage.setItem("folio_refresh", data.refreshToken);
   return data as { accessToken: string; refreshToken: string };
@@ -163,11 +233,14 @@ export async function refreshApi() {
 export async function logoutApi() {
   const refreshToken = getRefreshToken();
   try {
-    await apiFetch("/api/auth/logout", { method: "POST", body: JSON.stringify({ refreshToken }), credentials: "include" } as any);
+    await fetch(`${API_URL}/api/auth/logout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+      credentials: "include",
+    });
   } catch {}
-  localStorage.removeItem("folio_access");
-  localStorage.removeItem("folio_refresh");
-  localStorage.removeItem("folio_user");
+  handleGlobalLogout();
 }
 
 export async function meApi() {
@@ -259,7 +332,7 @@ export async function deleteCourseApi(id: string) {
 }
 
 // Experiences
-export type Experience = { id: string; userId: string; position: string; organization?: string | null; location?: string | null; startDate?: string | null; endDate?: string | null; current?: boolean; description?: string | null; skills?: string[] | null; visibility?: string; createdAt?: string };
+export type Experience = { id: string; userId: string; position: string; category?: string | null; organization?: string | null; location?: string | null; startDate?: string | null; endDate?: string | null; current?: boolean; description?: string | null; skills?: string[] | null; visibility?: string; createdAt?: string };
 export async function listExperiencesApi() {
   const data = await apiFetch("/api/experiences", { method: "GET", auth: true, revalidate: 30 });
   return data as { data: Experience[] };

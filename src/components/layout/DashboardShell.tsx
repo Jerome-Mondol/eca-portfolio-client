@@ -18,11 +18,26 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   // Redirect to login if not authenticated (after loading)
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading) {
       const token = typeof window !== "undefined" ? localStorage.getItem("folio_access") : null;
-      if (!token) router.replace("/login");
+      if (!user && !token) {
+        // Use window.location.replace for a clean redirect (avoids Next.js router race)
+        window.location.replace("/login");
+      }
     }
-  }, [loading, user, router]);
+  }, [loading, user]);
+
+  const token = typeof window !== "undefined" ? localStorage.getItem("folio_access") : null;
+  if (loading || (!user && !token)) {
+    return (
+      <div className="min-h-screen bg-[#fcfcfd] flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="h-8 w-8 rounded-full border-2 border-[#111827] border-t-transparent animate-spin mx-auto" />
+          <p className="text-sm text-[#6b6b76]">{loading ? "Loading..." : "Redirecting to login..."}</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     try {

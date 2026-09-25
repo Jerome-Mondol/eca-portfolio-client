@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ export default function SkillsPage() {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [category, setCategory] = useState<string>("Technical");
+  const [saving, setSaving] = useState(false);
 
   const fetchList = async () => {
     try {
@@ -34,6 +36,7 @@ export default function SkillsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) { toastError("Name required"); return; }
+    setSaving(true);
     try {
       const res = await createSkillApi({ name: name.trim(), category });
       setItems((v) => [res.data, ...v]);
@@ -41,6 +44,8 @@ export default function SkillsPage() {
       success("Skill added");
     } catch (err: any) {
       toastError("Add failed", err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -79,7 +84,9 @@ export default function SkillsPage() {
               <Select value={category} onChange={setCategory} options={[...categories]} />
             </div>
           </div>
-          <Button type="submit" className="w-full sm:w-auto min-h-[44px] cursor-pointer">Add skill</Button>
+          <Button type="submit" disabled={saving} className="w-full sm:w-auto min-h-[44px] cursor-pointer">
+            {saving ? (<><Loader2 size={14} className="mr-1.5 animate-spin" /> Adding...</>) : "Add skill"}
+          </Button>
         </form>
       </Card>
 
