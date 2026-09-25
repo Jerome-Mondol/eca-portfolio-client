@@ -276,6 +276,10 @@ export async function updateProjectApi(id: string, payload: any) {
 export async function deleteProjectApi(id: string) {
   return apiFetch(`/api/projects/${id}`, { method: "DELETE", auth: true });
 }
+export async function verifyProjectLinkApi(url: string) {
+  const data = await apiFetch("/api/projects/verify-link", { method: "POST", auth: true, body: JSON.stringify({ url }) });
+  return data as { valid: boolean; url: string; status?: number; statusText?: string; domain?: string; message: string };
+}
 
 // Activities (ECA) — now with images (max 5, R2)
 export type Activity = { id: string; userId: string; activityName: string; category?: string | null; organization?: string | null; role?: string | null; description?: string | null; skills?: string[] | null; images?: string[] | null; visibility?: string; createdAt?: string };
@@ -296,7 +300,7 @@ export async function deleteActivityApi(id: string) {
 }
 
 // Certificates
-export type Certificate = { id: string; userId: string; name: string; organization?: string | null; issueDate?: string | null; skills?: string[] | null; credentialId?: string | null; credentialUrl?: string | null; visibility?: string; createdAt?: string };
+export type Certificate = { id: string; userId: string; name: string; organization?: string | null; issueDate?: string | null; skills?: string[] | null; credentialId?: string | null; credentialUrl?: string | null; documentKey?: string | null; documentName?: string | null; visibility?: string; createdAt?: string };
 export async function listCertificatesApi() {
   const data = await apiFetch("/api/certificates", { method: "GET", auth: true });
   return data as { data: Certificate[] };

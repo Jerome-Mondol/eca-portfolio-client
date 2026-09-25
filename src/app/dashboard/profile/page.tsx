@@ -10,7 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { getProfileApi, updateProfileApi } from "@/lib/api";
 import { uploadImage, getImageUrl } from "@/lib/upload";
 import { Select } from "@/components/ui/select";
-import { Copy, Check, Upload, ExternalLink, MapPin, GraduationCap, Code2, Link2, Globe, Camera, Video, Palette, FileText, Users, Bird, Plus, Trash2 } from "lucide-react";
+import { Copy, Check, Upload, ExternalLink, MapPin, GraduationCap, Code2, Link2, Globe, Camera, Video, Palette, FileText, Users, Bird, Plus, Trash2, Loader2 } from "lucide-react";
 
 export default function ProfilePage() {
   const { user, refreshUser } = useAuth();
@@ -220,6 +220,7 @@ export default function ProfilePage() {
           <p className="text-sm text-[#6b6b76]">Your public profile — ECA showcase.</p>
         </div>
         <Button onClick={save} disabled={saving} className="w-full sm:w-auto min-h-[44px] cursor-pointer">
+          {saving && <Loader2 size={14} className="mr-2 animate-spin" />}
           {saving ? "Saving..." : "Save changes"}
         </Button>
       </div>

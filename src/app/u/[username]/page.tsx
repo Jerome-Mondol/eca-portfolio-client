@@ -22,12 +22,27 @@ function getPlatformIcon(platform: string, size = 14) {
   return <Globe size={size} />;
 }
 
+function formatExperienceDate(value?: string | null) {
+  if (!value) return null;
+  const datePart = value.slice(0, 10);
+  const parsed = new Date(`${datePart}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+}
+
+function getExperienceDateRange(experience: any) {
+  const start = formatExperienceDate(experience.startDate);
+  const end = experience.current ? "Present" : formatExperienceDate(experience.endDate);
+  if (start && end) return `${start} - ${end}`;
+  return start || end;
+}
 export default function PublicPortfolioPage() {
   const params = useParams() as { username: string };
   const username = params?.username as string;
   const [data, setData] = useState<PublicPortfolio | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!username) return;
@@ -132,27 +147,36 @@ export default function PublicPortfolioPage() {
               </div>
             )}
           </div>
-          <Card className="p-4 sm:p-5 min-w-0">
-            <h3 className="text-sm font-semibold">About</h3>
-            {education?.degree || education?.institution ? (
-              <p className="text-sm text-[#4a4a52] mt-2 leading-6 break-words">
-                {education.degree ? <span className="font-medium text-[#111827]">{education.degree}</span> : null}
-                {education.degree && education.institution ? " • " : null}
-                {education.institution ? <span className="font-medium">{education.institution}</span> : null}
-                {profile?.location ? ` • ${profile.location}` : ""}
-              </p>
-            ) : (
-              <p className="text-sm text-[#8a8a94] mt-2">No education added yet.</p>
-            )}
-            {interests.length > 0 ? (
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                {interests.map((i) => (<Badge key={i}>{i}</Badge>))}
+          {/* <Card className="portfolio-snapshot p-5 sm:p-6 min-w-0 overflow-hidden">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#6b6b76]">Portfolio snapshot</p>
+                <h2 className="mt-1 text-lg font-semibold tracking-tight">Work at a glance</h2>
               </div>
-            ) : (
-              <p className="text-xs text-[#8a8a94] mt-3">No interests listed.</p>
+              <span className="h-10 w-10 rounded-2xl bg-[#f3f4f6] flex items-center justify-center text-[#111827] text-lg" aria-hidden="true">&#10022;</span>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              {[
+                { label: "Projects", count: projects.length },
+                { label: "Experience", count: experiences.length },
+                { label: "Certificates", count: certificates.length },
+                { label: "Skills", count: skills.length },
+              ].map((stat) => (
+                <div key={stat.label} className="portfolio-snapshot__stat rounded-2xl border border-[#ececef] bg-white/80 p-3">
+                  <span className="block text-2xl font-semibold tracking-tight text-[#111827]">{stat.count}</span>
+                  <span className="mt-1 block text-xs text-[#6b6b76]">{stat.label}</span></div>
+              ))}
+            </div>
+            {hasSkills && (
+              <div className="mt-5">
+                <p className="text-xs font-medium text-[#6b6b76] mb-2">Areas I work with</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {skills.slice(0, 5).map((skill: any) => <Badge key={skill.id}>{skill.name}</Badge>)}
+                  {skills.length > 5 && <span className="inline-flex items-center rounded-full border border-[#e8e8ea] px-2.5 py-1 text-xs text-[#6b6b76]">+{skills.length - 5}</span>}
+                </div>
+              </div>
             )}
-            {profile?.location && <p className="mt-4 flex items-center gap-1.5 text-xs text-[#6b6b76]"><MapPin size={12} /> {profile.location}</p>}
-          </Card>
+          </Card> */}
         </div>
       </section>
 
@@ -160,15 +184,19 @@ export default function PublicPortfolioPage() {
       {hasExperiences && (
         <section id="experience" className="mx-auto max-w-[1080px] px-3 sm:px-6 py-4 sm:py-6">
           <h2 className="text-lg font-semibold tracking-tight">Experience</h2>
-          <div className="mt-4 space-y-3">
-            {experiences.map((ex: any) => (
-              <Card key={ex.id} className="p-4 sm:p-5">
-                <h3 className="font-semibold text-sm break-words">{ex.position}</h3>
-                <p className="text-sm text-[#6b6b76] break-words">{[ex.organization, ex.location].filter(Boolean).join(" • ") || "—"}</p>
-                <p className="text-xs text-[#8a8a94] mt-1">{ex.startDate ? new Date(ex.startDate + "T12:00:00").toLocaleDateString("en-GB", { month: "short", year: "numeric" }) : ""} {ex.endDate ? `— ${new Date(ex.endDate + "T12:00:00").toLocaleDateString("en-GB", { month: "short", year: "numeric" })}` : ex.current ? "— Present" : ""}</p>
-                {ex.description && <p className="text-sm text-[#4a4a52] mt-2 break-words">{ex.description}</p>}
-                {ex.skills?.length > 0 && <div className="flex flex-wrap gap-1.5 mt-2">{ex.skills.map((s: string) => <Badge key={s}>{s}</Badge>)}</div>}
-              </Card>
+          <div className="experience-timeline mt-8">
+            <div className="experience-timeline__spine" aria-hidden="true" />
+            {experiences.map((ex: any, index: number) => (
+              <article key={ex.id} className={`experience-timeline__item ${index % 2 === 0 ? "is-left" : "is-right"}`}>
+                <span className="experience-timeline__dot" aria-hidden="true" />
+                <Card className="experience-timeline__card p-4 sm:p-5">
+                  {getExperienceDateRange(ex) && <p className="text-xs font-medium text-[#ef6b75] mb-2">{getExperienceDateRange(ex)}</p>}
+                  <h3 className="font-semibold text-sm break-words">{ex.position}</h3>
+                  <p className="text-sm text-[#6b6b76] break-words">{[ex.organization, ex.location].filter(Boolean).join(" | ") || "-"}</p>
+                  {ex.description && <p className="text-sm text-[#4a4a52] mt-2 break-words">{ex.description}</p>}
+                  {ex.skills?.length > 0 && <div className="flex flex-wrap gap-1.5 mt-3">{ex.skills.map((skill: string) => <Badge key={skill}>{skill}</Badge>)}</div>}
+                </Card>
+              </article>
             ))}
           </div>
         </section>
@@ -181,57 +209,44 @@ export default function PublicPortfolioPage() {
             <h2 className="text-lg font-semibold tracking-tight">Projects</h2>
             <span className="text-xs text-[#8a8a94]">{projects.length} project{projects.length > 1 ? "s" : ""}</span>
           </div>
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {projects.map((p: any) => (
-              <Card key={p.id} className="overflow-hidden min-w-0 flex flex-col group hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-shadow">
-                {p.coverImage ? (
-                  <div className="relative h-48 w-full overflow-hidden bg-[#f8f8f9]">
-                    <img src={getImageUrl(p.coverImage)} alt={p.title} className="h-full w-full object-cover group-hover:scale-[1.02] transition duration-300" />
-                    {p.featured && <span className="absolute top-3 left-3 text-xs bg-[#111827] text-white rounded-full px-2.5 py-1 font-medium shadow-sm">Featured</span>}
+          <div className={"project-grid project-grid--count-" + Math.min(projects.length, 5) + " mt-5"}>
+            {projects.slice(0, 5).map((p: any, index: number) => {
+              const projectLinks = p.links?.length ? p.links : [
+                ...(p.githubUrl ? [{ platform: "GitHub", url: p.githubUrl }] : []),
+                ...(p.liveUrl ? [{ platform: "Live", url: p.liveUrl }] : []),
+              ];
+              return (
+                <article key={p.id} className="project-grid__card" style={{ animationDelay: index * 90 + "ms" }}>
+                  <div className="project-grid__media">
+                    {p.coverImage ? <img src={getImageUrl(p.coverImage)} alt="" loading="lazy" /> : <div className="project-grid__placeholder"><FileText size={28} /></div>}
                   </div>
-                ) : (
-                  <div className="h-48 w-full bg-gradient-to-br from-[#f8f8f9] to-[#ececef] border-b border-[#e8e8ea] flex flex-col items-center justify-center gap-2">
-                    <div className="h-10 w-10 rounded-xl bg-white border border-[#e8e8ea] flex items-center justify-center"><FileText size={18} className="text-[#8a8a94]" /></div>
-                    <span className="text-xs text-[#8a8a94]">No cover image</span>
-                  </div>
-                )}
-                <div className="p-4 flex flex-col flex-1">
-                  <h3 className="font-semibold text-[15px] leading-tight break-words">{p.title}</h3>
-                  <p className="text-sm text-[#6b6b76] mt-1.5 line-clamp-2 break-words">{p.description ?? "No description"}</p>
-                  {p.technologies?.length > 0 && (
-                    <div className="mt-3 rounded-xl bg-[#f8f8f9] border border-[#f0f0f2] px-3 py-2">
-                      <p className="text-xs font-medium text-[#111827]">Things used</p>
-                      <p className="text-xs text-[#6b6b76] mt-1 leading-4">{p.technologies.join(" / ")}</p>
+                  <div className="project-grid__shade" />
+                  <div className="project-grid__content">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/70">Project 0{index + 1}</span>
+                      {p.featured && <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium text-white">Featured</span>}
                     </div>
-                  )}
-                  {p.skills?.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-3">
-                      {p.skills.slice(0, 3).map((s: string) => <Badge key={s} className="text-xs">{s}</Badge>)}
-                      {p.skills.length > 3 && <span className="text-xs text-[#8a8a94]">+{p.skills.length - 3}</span>}
-                    </div>
-                  )}
-                  {/* Links — always visible, prominent */}
-                  <div className="mt-4">
-                    {p.links?.length > 0 ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {p.links.map((l: any, i: number) => (
-                          <a key={i} href={l.url.startsWith("http") ? l.url : `https://${l.url}`} target="_blank" className="inline-flex items-center gap-1.5 text-xs font-medium border border-[#e8e8ea] rounded-full px-3 py-1.5 bg-white hover:bg-[#f8f8f9] hover:border-[#d0d0d6] cursor-pointer transition">
-                            {getPlatformIcon(l.platform, 12)} {l.platform} <ExternalLink size={10} className="opacity-50" />
+                    <h3 className="text-lg sm:text-xl font-semibold tracking-tight text-white break-words">{p.title}</h3>
+                    {p.description && <p className="mt-1.5 max-w-2xl text-sm leading-5 text-white/85 line-clamp-2">{p.description}</p>}
+                    {p.technologies?.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {p.technologies.slice(0, 4).map((technology: string) => <span key={technology} className="rounded-full border border-white/20 bg-black/20 px-2.5 py-1 text-[11px] text-white/90">{technology}</span>)}
+                        {p.technologies.length > 4 && <span className="self-center text-xs text-white/70">+{p.technologies.length - 4}</span>}
+                      </div>
+                    )}
+                    {projectLinks.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {projectLinks.map((link: any, linkIndex: number) => (
+                          <a key={link.platform + linkIndex} href={link.url.startsWith("http") ? link.url : "https://" + link.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-[#111827] transition hover:bg-white/85">
+                            {getPlatformIcon(link.platform, 12)}{link.platform}<ExternalLink size={10} />
                           </a>
                         ))}
                       </div>
-                    ) : p.githubUrl || p.liveUrl ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {p.githubUrl && <a href={p.githubUrl} target="_blank" className="inline-flex items-center gap-1.5 text-xs font-medium border border-[#e8e8ea] rounded-full px-3 py-1.5 bg-white hover:bg-[#f8f8f9] cursor-pointer"> <Code2 size={12} /> GitHub <ExternalLink size={10} className="opacity-50" /></a>}
-                        {p.liveUrl && <a href={p.liveUrl} target="_blank" className="inline-flex items-center gap-1.5 text-xs font-medium bg-[#111827] text-white rounded-full px-3 py-1.5 hover:bg-black cursor-pointer"> <Globe size={12} /> Live <ExternalLink size={10} /></a>}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-[#8a8a94] italic">No links added</p>
                     )}
                   </div>
-                </div>
-              </Card>
-            ))}
+                </article>
+              );
+            })}
           </div>
         </section>
       )}
@@ -280,6 +295,7 @@ export default function PublicPortfolioPage() {
                     <div className="h-40 bg-[#f8f8f9] border-b border-[#e8e8ea] flex flex-col items-center justify-center gap-2 p-3 relative overflow-hidden">
                       <div className="h-10 w-10 rounded-xl bg-white border border-[#e8e8ea] flex items-center justify-center shadow-sm"><FileText size={18} className="text-[#6b6b76]" /></div>
                       <p className="text-xs font-medium truncate max-w-[180px]">{c.name}</p>
+                      <p className="text-xs text-[#6b6b76] truncate max-w-full" title={c.documentName || undefined}>{c.documentName || "Certificate PDF"}</p>
                       <a href={getImageUrl(c.documentKey)} target="_blank" className="text-xs bg-[#111827] text-white rounded-full px-3 py-1.5 hover:bg-black cursor-pointer inline-flex items-center gap-1">View PDF <ExternalLink size={10} /></a>
                     </div>
                   ) : (

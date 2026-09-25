@@ -58,6 +58,7 @@ export default function DocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+  const [uploadedOriginalName, setUploadedOriginalName] = useState<string>("");
   const [docName, setDocName] = useState("");
   const [category, setCategory] = useState<string>("Certificates");
   const [filter, setFilter] = useState<string>("All");
@@ -160,7 +161,7 @@ export default function DocumentsPage() {
       toastError("Please upload a file first");
       return;
     }
-    const finalName = docName.trim() || uploadedUrl.split("/").pop() || "Document";
+    const finalName = docName.trim() || uploadedOriginalName || "Document";
     setSaving(true);
     try {
       const res = await createDocumentApi({
@@ -182,6 +183,7 @@ export default function DocumentsPage() {
       setItems((v) => [newDoc, ...v]);
       setDocName("");
       setUploadedUrl(null);
+      setUploadedOriginalName("");
       setShowForm(false);
       success("Document added to library");
     } catch (err: any) {
@@ -251,7 +253,16 @@ export default function DocumentsPage() {
           <form onSubmit={handleCreate} className="space-y-4">
             <FileUploadCard
               value={uploadedUrl}
-              onChange={setUploadedUrl}
+              fileName={uploadedOriginalName || docName}
+              onChange={(url, meta) => {
+                setUploadedUrl(url);
+                if (!url) {
+                  setUploadedOriginalName("");
+                } else if (meta?.originalName) {
+                  setUploadedOriginalName(meta.originalName);
+                  if (!docName.trim()) setDocName(meta.originalName);
+                }
+              }}
               title="Upload Document or Proof File"
               subtitle="Upload PDF or image file to store in your document library."
             />

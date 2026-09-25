@@ -7,11 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
-import { listProjectsApi, createProjectApi, deleteProjectApi, updateProjectApi, type Project } from "@/lib/api";
+import { listProjectsApi, createProjectApi, deleteProjectApi, updateProjectApi, verifyProjectLinkApi, type Project } from "@/lib/api";
 import { getImageUrl } from "@/lib/upload";
 import { FileUploadCard } from "@/components/ui/file-upload";
 import { Select, SelectOption } from "@/components/ui/select";
-import { Trash2, Plus, Globe, Code2, Link2, Bird, Users, Camera, Video, Palette, FileText, GraduationCap } from "lucide-react";
+import { Trash2, Plus, Globe, Code2, Link2, Bird, Users, Camera, Video, Palette, FileText, GraduationCap, CheckCircle2, AlertCircle, Loader2, ShieldCheck } from "lucide-react";
 
 import { useConfirm } from "@/components/ui/confirm-dialog";
 
@@ -41,11 +41,40 @@ export default function ProjectsPage() {
   const [description, setDescription] = useState("");
   const [tech, setTech] = useState("");
   const [coverImage, setCoverImage] = useState<string | null>(null);
-  const [links, setLinks] = useState<Array<{ platform: string; url: string }>>([]);
+  const [links, setLinks] = useState<Array<{ platform: string; url: string; verified?: boolean; statusText?: string }>>([]);
   const [newPlatform, setNewPlatform] = useState("GitHub");
   const [newUrl, setNewUrl] = useState("");
   const [newCustom, setNewCustom] = useState("");
   const [featured, setFeatured] = useState(false);
+  const [showOnPortfolio, setShowOnPortfolio] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Real-time URL verification state
+  const [verifying, setVerifying] = useState(false);
+  const [verifyResult, setVerifyResult] = useState<{ valid: boolean; url: string; status?: number; statusText?: string; domain?: string; message: string } | null>(null);
+
+  useEffect(() => {
+    const trimmed = newUrl.trim();
+    if (!trimmed || trimmed.length < 4 || !trimmed.includes(".")) {
+      setVerifyResult(null);
+      setVerifying(false);
+      return;
+    }
+
+    setVerifying(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await verifyProjectLinkApi(trimmed);
+        setVerifyResult(res);
+      } catch {
+        setVerifyResult({ valid: false, url: trimmed, message: "Could not reach domain" });
+      } finally {
+        setVerifying(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [newUrl]);
 
   const fetchList = async () => {
     try {
@@ -60,22 +89,33 @@ export default function ProjectsPage() {
   useEffect(() => { fetchList(); }, []);
 
   const resetForm = () => {
-    setTitle(""); setDescription(""); setTech(""); setCoverImage(null); setLinks([]); setNewPlatform("GitHub"); setNewUrl(""); setNewCustom(""); setFeatured(false); setEditing(null); setShowForm(false);
+    setTitle(""); setDescription(""); setTech(""); setCoverImage(null); setLinks([]); setNewPlatform("GitHub"); setNewUrl(""); setNewCustom(""); setFeatured(false); setShowOnPortfolio(true); setEditing(null); setShowForm(false); setVerifyResult(null); setVerifying(false);
   };
 
   const addLink = () => {
     const platform = newPlatform === "Other" ? newCustom.trim() : newPlatform;
     const url = newUrl.trim();
     if (!platform || !url) { toastError("Platform and URL required"); return; }
-    if (!url.includes(".")) { toastError("Invalid URL"); return; }
-    setLinks([...links, { platform, url }]);
-    setNewUrl(""); setNewCustom("");
-    success("Link added");
+    if (!url.includes(".")) { toastError("Invalid URL format"); return; }
+
+    const isVerified = verifyResult?.url === (url.startsWith("http") ? url : `https://${url}`) || verifyResult?.url === url ? verifyResult.valid : undefined;
+    const statusMsg = verifyResult?.message;
+
+    setLinks([...links, { platform, url, verified: isVerified, statusText: statusMsg }]);
+    setNewUrl(""); setNewCustom(""); setVerifyResult(null);
+    if (isVerified) {
+      success("Link verified & added!");
+    } else {
+      success("Link added");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) { toastError("Title required"); return; }
+    const publicProjectCount = projects.filter((project) => project.visibility !== "private").length;
+    const editingIsPublic = !!editing && editing.visibility !== "private";
+    if (showOnPortfolio && !editingIsPublic && publicProjectCount >= 5) { toastError("Portfolio limit reached", "You can show up to 5 projects. Hide another project first."); return; }
     const payload: any = {
       title: title.trim(),
       description: description.trim() || null,
@@ -83,6 +123,7 @@ export default function ProjectsPage() {
       coverImage: coverImage || null,
       links: links.length > 0 ? links : null,
       featured,
+      visibility: showOnPortfolio ? "public" : "private",
     };
     // Keep legacy github/live for backward compat: first GitHub link -> githubUrl, first non-GitHub -> liveUrl
     const githubLink = links.find((l) => l.platform.toLowerCase().includes("github"));
@@ -90,6 +131,7 @@ export default function ProjectsPage() {
     if (githubLink) payload.githubUrl = githubLink.url;
     if (liveLink) payload.liveUrl = liveLink.url;
 
+    setSaving(true);
     try {
       if (editing) {
         const res = await updateProjectApi(editing.id, payload);
@@ -103,6 +145,8 @@ export default function ProjectsPage() {
       resetForm();
     } catch (err: any) {
       toastError("Save failed", err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -121,6 +165,7 @@ export default function ProjectsPage() {
       setLinks(arr);
     }
     setFeatured(!!p.featured);
+    setShowOnPortfolio(p.visibility !== "private");
     setShowForm(true);
   };
 
@@ -182,7 +227,19 @@ export default function ProjectsPage() {
                     <div key={idx} className="flex items-center gap-2 rounded-xl border border-[#e8e8ea] bg-[#f8f8f9] px-3 py-2">
                       <span className="h-7 w-7 rounded-full bg-white border flex items-center justify-center shrink-0">{getIcon(l.platform, 12)}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium">{l.platform}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-medium">{l.platform}</p>
+                          {l.verified === true && (
+                            <Badge variant="success" className="text-[10px] py-0 px-1.5 gap-1 bg-emerald-50 text-emerald-700 border-emerald-200">
+                              <CheckCircle2 size={10} /> Verified
+                            </Badge>
+                          )}
+                          {l.verified === false && (
+                            <Badge variant="danger" className="text-[10px] py-0 px-1.5 gap-1 bg-red-50 text-red-700 border-red-200">
+                              <AlertCircle size={10} /> Unreachable
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-xs text-[#6b6b76] truncate">{l.url}</p>
                       </div>
                       <button type="button" onClick={() => setLinks(links.filter((_, i) => i !== idx))} className="h-7 w-7 rounded-full bg-white border flex items-center justify-center hover:bg-red-50 hover:text-red-600 cursor-pointer shrink-0">
@@ -192,26 +249,91 @@ export default function ProjectsPage() {
                   ))}
                 </div>
               )}
-              <div className="grid sm:grid-cols-[160px_1fr_auto] gap-2 items-center">
-                <Select
-                  value={newPlatform}
-                  onChange={setNewPlatform}
-                  options={platformOptions.map((p) => ({
-                    value: p,
-                    label: p,
-                    icon: getIcon(p, 14),
-                  }))}
-                />
-                <Input value={newUrl} onChange={(e) => setNewUrl(e.target.value)} placeholder="https://..." />
-                <Button type="button" variant="secondary" size="sm" onClick={addLink} className="cursor-pointer min-h-[44px]"><Plus size={14} /> Add</Button>
+              <div className="space-y-1.5">
+                <div className="grid sm:grid-cols-[160px_1fr_auto] gap-2 items-center">
+                  <Select
+                    value={newPlatform}
+                    onChange={setNewPlatform}
+                    options={platformOptions.map((p) => ({
+                      value: p,
+                      label: p,
+                      icon: getIcon(p, 14),
+                    }))}
+                  />
+                  <div className="relative flex-1">
+                    <Input value={newUrl} onChange={(e) => setNewUrl(e.target.value)} placeholder="https://github.com/username/project" className="pr-8" />
+                    {verifying && (
+                      <div className="absolute right-2.5 top-1/2 -translate-y-1/2 text-amber-500">
+                        <Loader2 size={14} className="animate-spin" />
+                      </div>
+                    )}
+                    {!verifying && verifyResult && (
+                      <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                        {verifyResult.valid ? (
+                          <CheckCircle2 size={15} className="text-emerald-600" />
+                        ) : (
+                          <AlertCircle size={15} className="text-red-500" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <Button type="button" variant="secondary" size="sm" onClick={addLink} className="cursor-pointer min-h-[44px]"><Plus size={14} /> Add</Button>
+                </div>
+                {newPlatform === "Other" && <Input value={newCustom} onChange={(e) => setNewCustom(e.target.value)} placeholder="Custom platform (e.g. Figma)" className="mt-1" />}
+
+                {/* Real-time verification feedback box */}
+                {verifying && (
+                  <div className="flex items-center gap-2 text-xs text-amber-800 bg-amber-50/80 border border-amber-200/70 rounded-xl px-3 py-2 animate-pulse">
+                    <Loader2 size={14} className="animate-spin text-amber-600 shrink-0" />
+                    <span>Verifying link availability...</span>
+                  </div>
+                )}
+                {!verifying && verifyResult && (
+                  <div className={`flex items-center justify-between text-xs rounded-xl px-3 py-2 border transition-all ${
+                    verifyResult.valid 
+                      ? "text-emerald-800 bg-emerald-50/80 border-emerald-200/80" 
+                      : "text-red-800 bg-red-50/80 border-red-200/80"
+                  }`}>
+                    <div className="flex items-center gap-2 min-w-0">
+                      {verifyResult.valid ? (
+                        <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />
+                      ) : (
+                        <AlertCircle size={15} className="text-red-600 shrink-0" />
+                      )}
+                      <span className="truncate">
+                        {verifyResult.valid ? (
+                          <>
+                            <strong className="font-semibold text-emerald-900">{verifyResult.domain}</strong> — {verifyResult.message}
+                          </>
+                        ) : (
+                          <span>{verifyResult.message}</span>
+                        )}
+                      </span>
+                    </div>
+                    {verifyResult.valid && (
+                      <Badge variant="success" className="bg-emerald-100 text-emerald-800 border-emerald-300 font-mono text-[10px] shrink-0 ml-2">
+                        {verifyResult.status || 200} OK
+                      </Badge>
+                    )}
+                  </div>
+                )}
               </div>
-              {newPlatform === "Other" && <Input value={newCustom} onChange={(e) => setNewCustom(e.target.value)} placeholder="Custom platform (e.g. Figma)" className="mt-1" />}
             </div>
 
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} className="h-4 w-4" /> Featured
             </label>
-            <Button type="submit" className="w-full sm:w-auto cursor-pointer">{editing ? "Update" : "Create"} project</Button>
+            <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={showOnPortfolio} disabled={!showOnPortfolio && projects.filter((project) => project.visibility !== "private").length >= 5} onChange={(e) => setShowOnPortfolio(e.target.checked)} className="h-4 w-4 mt-0.5" />
+              <span>
+                Show on portfolio
+                <span className="block text-xs text-[#8a8a94] mt-0.5">{projects.filter((project) => project.visibility !== "private").length}/5 projects selected</span>
+              </span>
+            </label>
+            <Button type="submit" disabled={saving} className="w-full sm:w-auto cursor-pointer min-h-[44px]">
+              {saving && <Loader2 size={14} className="mr-2 animate-spin" />}
+              {saving ? (editing ? "Updating..." : "Creating...") : editing ? "Update project" : "Create project"}
+            </Button>
           </form>
         </Card>
       )}
@@ -227,6 +349,7 @@ export default function ProjectsPage() {
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-semibold text-sm leading-tight">{p.title}</h3>
                   {p.featured && <Badge className="bg-[#111827] text-white shrink-0">Featured</Badge>}
+                  {p.visibility === "private" && <Badge variant="secondary" className="shrink-0">Hidden</Badge>}
                 </div>
                 <p className="text-sm text-[#6b6b76] mt-1 line-clamp-2">{p.description ?? "—"}</p>
                 {p.technologies && p.technologies.length > 0 && (

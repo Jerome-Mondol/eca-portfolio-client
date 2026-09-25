@@ -9,7 +9,8 @@ import { ImageSlider } from "./image-slider";
 
 type SingleProps = {
   value: string | null;
-  onChange: (url: string | null) => void;
+  onChange: (url: string | null, meta?: { originalName?: string; file?: File }) => void;
+  fileName?: string | null;
   values?: never;
   onAddImages?: never;
   onRemoveImage?: never;
@@ -19,6 +20,7 @@ type SingleProps = {
 type MultiProps = {
   value?: never;
   onChange?: never;
+  fileName?: never;
   values: string[];
   onAddImages: (urls: string[]) => void;
   onRemoveImage: (index: number) => void;
@@ -37,6 +39,7 @@ export type FileUploadCardProps = CommonProps & (SingleProps | MultiProps);
 export function FileUploadCard({
   value,
   onChange,
+  fileName,
   values,
   onAddImages,
   onRemoveImage,
@@ -49,6 +52,7 @@ export function FileUploadCard({
   const { error: toastError, success } = useToast();
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isMulti = Array.isArray(values);
@@ -57,6 +61,12 @@ export function FileUploadCard({
     (url.toLowerCase().endsWith(".pdf") ||
       url.toLowerCase().includes("application/pdf") ||
       url.toLowerCase().includes(".pdf"));
+
+  const rawName = value ? value.split("/").pop() || "" : "";
+  const displayFileName =
+    fileName ||
+    uploadedFileName ||
+    (rawName ? (rawName.includes("-") && /^\d+-/.test(rawName) ? rawName.replace(/^\d+-[a-z0-9]+\./i, "file.") : rawName) : "Uploaded file");
 
   const handleFiles = async (filesList: FileList | File[]) => {
     const files = Array.from(filesList);
@@ -103,8 +113,10 @@ export function FileUploadCard({
       setUploading(true);
       try {
         const res = await uploadImage(file);
-        onChange?.(res.url);
-        success("File uploaded", file.name);
+        const nameToUse = res.originalName || file.name;
+        setUploadedFileName(nameToUse);
+        onChange?.(res.url, { originalName: nameToUse, file });
+        success("File uploaded", nameToUse);
       } catch (err: any) {
         toastError("Upload failed", err.message);
       } finally {
@@ -223,17 +235,20 @@ export function FileUploadCard({
                 <div className="h-10 w-10 rounded-xl bg-white border border-[#e8e8ea] flex items-center justify-center">
                   <FileText size={18} className="text-[#6b6b76]" />
                 </div>
-                <p className="text-xs font-medium truncate max-w-[200px]">{value.split("/").pop()}</p>
+                <p className="text-xs font-medium truncate max-w-[200px]">{displayFileName}</p>
                 <p className="text-xs text-[#8a8a94]">PDF • Click to change</p>
               </div>
             ) : (
               <img src={getImageUrl(value)} alt="Preview" className="h-48 w-full object-contain bg-white" />
             )}
             <div className="p-2 flex items-center justify-between bg-[#f8f8f9] border-t border-[#e8e8ea]">
-              <span className="text-xs text-[#6b6b76] truncate flex-1 px-1">{value.split("/").pop()}</span>
+              <span className="text-xs text-[#6b6b76] truncate flex-1 px-1">{displayFileName}</span>
               <button
                 type="button"
-                onClick={() => onChange?.(null)}
+                onClick={() => {
+                  setUploadedFileName(null);
+                  onChange?.(null);
+                }}
                 className="h-7 w-7 rounded-full bg-white border border-[#e8e8ea] flex items-center justify-center hover:bg-red-50 hover:text-red-600 hover:border-red-200 cursor-pointer shrink-0"
                 aria-label="Remove file"
               >

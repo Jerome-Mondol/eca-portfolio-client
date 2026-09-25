@@ -12,7 +12,7 @@ function getAccessToken(): string | null {
  * Returns { id, url, key } where url is /api/upload/image/:id (relative)
  * Frontend should prefix with API_URL for display
  */
-export async function uploadImage(file: File): Promise<{ id: string; url: string; fullUrl: string; key: string }> {
+export async function uploadImage(file: File): Promise<{ id: string; url: string; fullUrl: string; key: string; originalName: string }> {
   const form = new FormData();
   form.append("image", file);
 
@@ -39,7 +39,7 @@ export async function uploadImage(file: File): Promise<{ id: string; url: string
   }
   const d = data.data;
   const fullUrl = d.url?.startsWith("http") ? d.url : `${API_URL}${d.url}`;
-  return { id: d.id, url: d.url, fullUrl, key: d.key };
+  return { id: d.id, url: d.url, fullUrl, key: d.key, originalName: d.originalName || file.name };
 }
 
 export function getImageUrl(urlOrKey: string): string {

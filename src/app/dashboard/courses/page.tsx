@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/toast";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Select, SelectOption } from "@/components/ui/select";
 import { listCoursesApi, createCourseApi, updateCourseApi, deleteCourseApi, listCertificatesApi, type Course, type Certificate } from "@/lib/api";
+import { Loader2 } from "lucide-react";
 
 export default function CoursesPage() {
   const { success, error: toastError } = useToast();
@@ -170,7 +171,8 @@ export default function CoursesPage() {
               <Input value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="React, Node.js" className="mt-1.5" />
             </div>
             <Button type="submit" disabled={saving} className="w-full sm:w-auto cursor-pointer min-h-[44px]">
-              {saving ? "Saving..." : editing ? "Update course" : "Create course"}
+              {saving && <Loader2 size={14} className="mr-2 animate-spin" />}
+              {saving ? (editing ? "Updating..." : "Creating...") : editing ? "Update course" : "Create course"}
             </Button>
           </form>
         </Card>

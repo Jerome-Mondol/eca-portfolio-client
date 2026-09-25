@@ -28,6 +28,7 @@ export default function CertificatesPage() {
   const [credentialUrl, setCredentialUrl] = useState("");
   const [skills, setSkills] = useState("");
   const [documentKey, setDocumentKey] = useState<string | null>(null);
+  const [documentName, setDocumentName] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const fetchList = async () => {
@@ -42,7 +43,7 @@ export default function CertificatesPage() {
   };
   useEffect(() => { fetchList(); }, []);
 
-  const reset = () => { setName(""); setOrg(""); setIssueDate(""); setCredentialId(""); setCredentialUrl(""); setSkills(""); setDocumentKey(null); setEditing(null); setShowForm(false); };
+  const reset = () => { setName(""); setOrg(""); setIssueDate(""); setCredentialId(""); setCredentialUrl(""); setSkills(""); setDocumentKey(null); setDocumentName(null); setEditing(null); setShowForm(false); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +57,7 @@ export default function CertificatesPage() {
       credentialUrl: credentialUrl.trim() || null,
       skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
       documentKey: documentKey || null,
+      documentName: documentName || null,
     };
     try {
       if (editing) {
@@ -96,6 +98,7 @@ export default function CertificatesPage() {
     setCredentialUrl(c.credentialUrl ?? "");
     setSkills((c.skills ?? []).join(", "));
     setDocumentKey((c as any).documentKey ?? null);
+    setDocumentName((c as any).documentName ?? null);
     setShowForm(true);
   };
   const handleDelete = async (id: string) => {
@@ -159,7 +162,7 @@ export default function CertificatesPage() {
               </div>
             </div>
 
-            <FileUploadCard value={documentKey} onChange={setDocumentKey} title="Upload certificate image or PDF" subtitle="Will be shown in your public portfolio." />
+            <FileUploadCard value={documentKey} fileName={documentName} onChange={(url, meta) => { setDocumentKey(url); setDocumentName(meta?.originalName ?? null); }} title="Upload certificate image or PDF" subtitle="Will be shown in your public portfolio." />
 
             <div>
               <Label>Skills (comma separated)</Label>
@@ -183,7 +186,7 @@ export default function CertificatesPage() {
                 isPdf((c as any).documentKey) ? (
                   <div className="h-32 bg-[#f8f8f9] border-b border-[#e8e8ea] flex flex-col items-center justify-center gap-1 p-3">
                     <FileText size={20} className="text-[#6b6b76]" />
-                    <p className="text-xs text-[#6b6b76] truncate max-w-[180px]">{(c as any).documentKey.split("/").pop()}</p>
+                    <p className="text-xs text-[#6b6b76] truncate max-w-[180px]">{(c as any).documentName || (c as any).documentKey.split("/").pop()}</p>
                     <a href={getImageUrl((c as any).documentKey)} target="_blank" className="text-xs bg-white border border-[#e8e8ea] rounded-full px-2 py-1 hover:bg-[#f3f3f5] cursor-pointer">View PDF</a>
                   </div>
                 ) : (
