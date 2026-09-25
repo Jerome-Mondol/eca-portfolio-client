@@ -100,7 +100,7 @@ export function Sidebar() {
           <p className="text-xl font-semibold tracking-tight mt-1">1,248</p>
           <p className="text-xs text-[#6b6b76]">+24 this week</p>
         </div>
-        <Link href={user ? `/u/${user.username}` : "/u/john-doe"} className="flex items-center justify-center rounded-full bg-white border border-[#e8e8ea] h-9 text-sm font-medium hover:bg-[#f3f3f5] transition">
+        <Link href={user ? `/u/${user.username}` : "/login"} className="flex items-center justify-center rounded-full bg-white border border-[#e8e8ea] h-9 text-sm font-medium hover:bg-[#f3f3f5] transition">
           View public portfolio →
         </Link>
         {user && (

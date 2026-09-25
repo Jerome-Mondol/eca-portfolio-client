@@ -1,8 +1,11 @@
+"use client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SettingsPage() {
+  const { user } = useAuth();
   return (
     <div className="space-y-6 max-w-[720px]">
       <div>
@@ -13,10 +16,9 @@ export default function SettingsPage() {
       <Card className="p-5 space-y-4">
         <h3 className="font-semibold text-sm">Account</h3>
         <div className="grid sm:grid-cols-2 gap-4">
-          <div><Label>Email</Label><Input defaultValue="john@example.com" className="mt-1.5" /></div>
-          <div><Label>Username</Label><Input defaultValue="john-doe" className="mt-1.5" /></div>
+          <div><Label>Email</Label><Input value={user?.email ?? ""} placeholder="john@example.com" readOnly className="mt-1.5 bg-[#f8f8f9]" /></div>
+          <div><Label>Username</Label><Input value={user?.username ?? ""} placeholder="john-doe" readOnly className="mt-1.5 bg-[#f8f8f9]" /></div>
         </div>
-        <Button variant="secondary" size="sm">Update email</Button>
       </Card>
 
       <Card className="p-5 space-y-4">

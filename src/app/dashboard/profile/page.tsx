@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/toast";
 import { getProfileApi, updateProfileApi } from "@/lib/api";
 import { uploadImage, getImageUrl } from "@/lib/upload";
+import { Select } from "@/components/ui/select";
 import { Copy, Check, Upload, ExternalLink, MapPin, GraduationCap, Code2, Link2, Globe, Camera, Video, Palette, FileText, Users, Bird, Plus, Trash2 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -378,12 +379,16 @@ export default function ProfilePage() {
               </div>
             )}
 
-            <div className="grid sm:grid-cols-[140px_1fr] gap-2">
-              <select value={newPlatform} onChange={(e) => setNewPlatform(e.target.value)} className="h-10 rounded-xl border border-[#e8e8ea] bg-white px-3 text-sm cursor-pointer">
-                {platformOptions.map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
+            <div className="grid sm:grid-cols-[160px_1fr] gap-2 items-center">
+              <Select
+                value={newPlatform}
+                onChange={setNewPlatform}
+                options={platformOptions.map((p) => ({
+                  value: p,
+                  label: p,
+                  icon: getPlatformIcon(p, 14),
+                }))}
+              />
               <Input value={newUrl} onChange={(e) => setNewUrl(e.target.value)} placeholder="https://..." className="" />
             </div>
             {newPlatform === "Other" && (

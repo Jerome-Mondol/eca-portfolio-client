@@ -1,26 +1,56 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL;
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 type ApiOptions = RequestInit & { auth?: boolean; cache?: "no-store" | "force-cache"; revalidate?: number };
 
-// Simple in-memory cache for GETs — 30s TTL for better UX (Next cache-like)
-const cache = new Map<string, { data: any; expires: number }>();
+// In-memory + localStorage cache for GETs — 60s fresh + 5min stale for near-instant (stale-while-revalidate)
+const memCache = new Map<string, { data: any; expires: number; staleExpires: number }>();
 function getCacheKey(path: string, auth: boolean) {
   const token = auth ? (typeof window !== "undefined" ? localStorage.getItem("folio_access")?.slice(0, 8) : "") : "";
   return `${path}::${token ?? ""}`;
 }
-function getCached(path: string, auth?: boolean) {
+function getCached(path: string, auth?: boolean): any | null {
   const k = getCacheKey(path, !!auth);
-  const v = cache.get(k);
+  const v = memCache.get(k);
   if (v && Date.now() < v.expires) return v.data;
-  if (v) cache.delete(k);
   return null;
 }
-function setCached(path: string, auth: boolean | undefined, data: any, ttlMs = 30_000) {
-  cache.set(getCacheKey(path, !!auth), { data, expires: Date.now() + ttlMs });
+function getStale(path: string, auth?: boolean): any | null {
+  const k = getCacheKey(path, !!auth);
+  const v = memCache.get(k);
+  if (v && Date.now() < v.staleExpires) return v.data;
+  return null;
+}
+function setCached(path: string, auth: boolean | undefined, data: any, ttlMs = 60_000) {
+  const k = getCacheKey(path, !!auth);
+  memCache.set(k, { data, expires: Date.now() + ttlMs, staleExpires: Date.now() + 300_000 });
+  // also persist to localStorage for reload instant
+  try {
+    if (typeof window !== "undefined" && ttlMs > 0) {
+      localStorage.setItem(`cache:${k}`, JSON.stringify({ data, expires: Date.now() + ttlMs }));
+    }
+  } catch {}
 }
 export function clearApiCache(pathPrefix?: string) {
-  if (!pathPrefix) { cache.clear(); return; }
-  for (const k of cache.keys()) if (k.startsWith(pathPrefix)) cache.delete(k);
+  if (!pathPrefix) { memCache.clear(); return; }
+  for (const k of memCache.keys()) if (k.startsWith(pathPrefix)) memCache.delete(k);
+}
+// Hydrate from localStorage on load
+if (typeof window !== "undefined") {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith("cache:")) {
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const { data, expires } = JSON.parse(raw);
+          if (Date.now() < expires) {
+            const k = key.slice(6);
+            memCache.set(k, { data, expires, staleExpires: expires + 240_000 });
+          } else localStorage.removeItem(key);
+        }
+      }
+    }
+  } catch {}
 }
 
 function getAccessToken(): string | null {
@@ -36,11 +66,30 @@ function getRefreshToken(): string | null {
 export async function apiFetch(path: string, opts: ApiOptions = {}) {
   const isGet = !opts.method || opts.method === "GET";
   const useCache = isGet && opts.cache !== "no-store";
-  const revalidateMs = (opts.revalidate ?? 30) * 1000;
+  const revalidateMs = (opts.revalidate ?? 60) * 1000;
 
   if (useCache) {
     const cached = getCached(path, opts.auth);
     if (cached) return cached;
+    // stale-while-revalidate: return stale instantly while revalidating in background
+    const stale = getStale(path, opts.auth);
+    if (stale) {
+      // background revalidate
+      setTimeout(() => {
+        fetch(`${API_URL}${path}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            ...(opts.auth && getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {}),
+            ...(opts.headers as any),
+          },
+          credentials: "include",
+        })
+          .then((r) => r.text().then((t) => { try { const d = JSON.parse(t); if (r.ok) setCached(path, opts.auth, d, revalidateMs); } catch {} }))
+          .catch(() => {});
+      }, 0);
+      return stale;
+    }
   }
 
   const headers: Record<string, string> = {
@@ -228,7 +277,7 @@ export async function deleteExperienceApi(id: string) {
 }
 
 // Achievements
-export type Achievement = { id: string; userId: string; title: string; category?: string | null; organization?: string | null; date?: string | null; description?: string | null; visibility?: string; createdAt?: string };
+export type Achievement = { id: string; userId: string; title: string; category?: string | null; organization?: string | null; date?: string | null; description?: string | null; images?: string[] | null; visibility?: string; createdAt?: string };
 export async function listAchievementsApi() {
   const data = await apiFetch("/api/achievements", { method: "GET", auth: true, revalidate: 30 });
   return data as { data: Achievement[] };

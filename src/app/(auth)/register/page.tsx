@@ -12,11 +12,11 @@ export default function RegisterPage() {
   const router = useRouter();
   const { register } = useAuth();
   const { success, error: toastError } = useToast();
-  const [fullName, setFullName] = useState("John Doe");
-  const [email, setEmail] = useState("john@example.com");
-  const [username, setUsername] = useState("john-doe");
-  const [password, setPassword] = useState("password123");
-  const [confirmPassword, setConfirmPassword] = useState("password123");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

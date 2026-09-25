@@ -3,10 +3,12 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/context/AuthContext";
 
 const defaultSections = ["Hero / Introduction", "About", "Experience", "Projects", "ECA / Activities", "Courses & Certificates", "Achievements", "Skills", "Education", "Contact"];
 
 export default function PortfolioEditorPage() {
+  const { user } = useAuth();
   const [sections, setSections] = useState(defaultSections);
   const [theme, setTheme] = useState("Minimal");
   const [accent, setAccent] = useState("#111827");
@@ -28,7 +30,7 @@ export default function PortfolioEditorPage() {
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button variant="secondary" className="flex-1 sm:flex-none min-h-[44px]">Preview</Button>
-          <a href="/u/john-doe" target="_blank" className="flex-1 sm:flex-none">
+          <a href={user ? `/u/${user.username}` : "/login"} target="_blank" className="flex-1 sm:flex-none">
             <Button className="w-full min-h-[44px]">View Portfolio →</Button>
           </a>
         </div>
@@ -82,17 +84,17 @@ export default function PortfolioEditorPage() {
         <Card className="overflow-hidden">
           <div className="h-9 border-b border-[#f0f0f2] flex items-center px-3 sm:px-4 gap-1.5 min-w-0">
             <span className="h-3 w-3 rounded-full bg-[#ff5f56] shrink-0" /><span className="h-3 w-3 rounded-full bg-[#ffbd2e] shrink-0" /><span className="h-3 w-3 rounded-full bg-[#27c93f] shrink-0" />
-            <span className="ml-2 text-xs text-[#8a8a94] truncate">folio.com/u/john-doe • {theme}</span>
+            <span className="ml-2 text-xs text-[#8a8a94] truncate">folio.com/u/{user?.username || "username"} • {theme}</span>
             <span className="ml-auto h-2 w-2 rounded-full shrink-0" style={{ background: accent }} />
           </div>
           <div className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row gap-4">
-              <img src="https://api.dicebear.com/9.x/initials/svg?seed=John%20Doe" alt="John" className="h-16 w-16 rounded-2xl border shrink-0 object-cover" width={64} height={64} />
+              <img src={`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(user?.fullName || user?.username || "User")}`} alt="Avatar" className="h-16 w-16 rounded-2xl border shrink-0 object-cover" width={64} height={64} />
               <div className="min-w-0">
-                <h2 className="text-lg font-semibold">John Doe</h2>
+                <h2 className="text-lg font-semibold">{user?.fullName || "Your Name"}</h2>
                 <p className="text-sm text-[#6b6b76]">Computer Science Student</p>
                 <p className="text-xs mt-1" style={{ color: accent }}>Developer • Builder • Student Leader</p>
-                <p className="text-sm text-[#4a4a52] mt-2">John is a computer science student with experience building web apps using modern JavaScript. Portfolio includes projects, courses, ECA and leadership.</p>
+                <p className="text-sm text-[#4a4a52] mt-2">Welcome to my portfolio! Showcasing software projects, technical courses, ECA and leadership achievements.</p>
               </div>
             </div>
             <div className="mt-6">

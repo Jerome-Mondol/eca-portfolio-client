@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { listProjectsApi, createProjectApi, deleteProjectApi, updateProjectApi, type Project } from "@/lib/api";
 import { getImageUrl } from "@/lib/upload";
 import { FileUploadCard } from "@/components/ui/file-upload";
+import { Select, SelectOption } from "@/components/ui/select";
 import { Trash2, Plus, Globe, Code2, Link2, Bird, Users, Camera, Video, Palette, FileText, GraduationCap } from "lucide-react";
 
 const platformOptions = ["GitHub", "LinkedIn", "Website", "Twitter", "Facebook", "Instagram", "YouTube", "Behance", "Dribbble", "Other"];
@@ -182,12 +183,18 @@ export default function ProjectsPage() {
                   ))}
                 </div>
               )}
-              <div className="grid sm:grid-cols-[140px_1fr_auto] gap-2">
-                <select value={newPlatform} onChange={(e) => setNewPlatform(e.target.value)} className="h-10 rounded-xl border border-[#e8e8ea] bg-white px-3 text-sm cursor-pointer">
-                  {platformOptions.map((p) => <option key={p} value={p}>{p}</option>)}
-                </select>
+              <div className="grid sm:grid-cols-[160px_1fr_auto] gap-2 items-center">
+                <Select
+                  value={newPlatform}
+                  onChange={setNewPlatform}
+                  options={platformOptions.map((p) => ({
+                    value: p,
+                    label: p,
+                    icon: getIcon(p, 14),
+                  }))}
+                />
                 <Input value={newUrl} onChange={(e) => setNewUrl(e.target.value)} placeholder="https://..." />
-                <Button type="button" variant="secondary" size="sm" onClick={addLink} className="cursor-pointer min-h-[40px]"><Plus size={14} /> Add</Button>
+                <Button type="button" variant="secondary" size="sm" onClick={addLink} className="cursor-pointer min-h-[44px]"><Plus size={14} /> Add</Button>
               </div>
               {newPlatform === "Other" && <Input value={newCustom} onChange={(e) => setNewCustom(e.target.value)} placeholder="Custom platform (e.g. Figma)" className="mt-1" />}
             </div>

@@ -91,7 +91,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 </div>
               ) : (
                 <img
-                  src="https://api.dicebear.com/9.x/initials/svg?seed=John%20Doe"
+                  src="https://api.dicebear.com/9.x/initials/svg?seed=User"
                   alt="avatar"
                   className="h-11 w-11 shrink-0 rounded-full border border-[#e8e8ea] object-cover bg-white"
                   width={44}
@@ -151,7 +151,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   <LogOut size={16} /> Log out ({user.username})
                 </button>
               )}
-              <Link href={user ? `/u/${user.username}` : "/u/john-doe"} className="col-span-2 min-h-[44px] px-3 py-3 rounded-xl bg-[#111827] text-white text-sm font-medium text-center flex items-center justify-center" onClick={() => setMobileMenu(false)}>
+              <Link href={user ? `/u/${user.username}` : "/login"} className="col-span-2 min-h-[44px] px-3 py-3 rounded-xl bg-[#111827] text-white text-sm font-medium text-center flex items-center justify-center" onClick={() => setMobileMenu(false)}>
                 View public portfolio →
               </Link>
             </div>

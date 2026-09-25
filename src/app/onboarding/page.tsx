@@ -42,7 +42,7 @@ export default function OnboardingPage() {
               <p className="text-sm text-[#6b6b76] mt-1">This is how it will appear on your public portfolio.</p>
               <div className="mt-6">
                 <Label htmlFor="name">Full name</Label>
-                <Input id="name" defaultValue="John Doe" className="mt-1.5" />
+                <Input id="name" placeholder="e.g. John Doe" className="mt-1.5" />
               </div>
               <div className="mt-6 flex justify-between">
                 <span />
@@ -57,11 +57,11 @@ export default function OnboardingPage() {
               <div className="mt-6 space-y-4">
                 <div>
                   <Label>Bio</Label>
-                  <textarea defaultValue="Computer Science student passionate about web development and AI." className="mt-1.5 w-full min-h-[88px] rounded-xl border border-[#e8e8ea] p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#111827]/10" />
+                  <textarea placeholder="Computer Science student passionate about web development and AI." className="mt-1.5 w-full min-h-[88px] rounded-xl border border-[#e8e8ea] p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#111827]/10" />
                 </div>
                 <div>
                   <Label>Education</Label>
-                  <Input defaultValue="BSc in Computer Science, University of Dhaka" className="mt-1.5" />
+                  <Input placeholder="e.g. BSc in Computer Science, University of Dhaka" className="mt-1.5" />
                 </div>
               </div>
               <div className="mt-6 flex justify-between">
@@ -116,7 +116,6 @@ export default function OnboardingPage() {
               <p className="text-sm text-[#6b6b76] mt-2 max-w-sm mx-auto">You&apos;re all set. Add one project and one certificate to see a beautiful portfolio instantly.</p>
               <div className="mt-6 flex justify-center gap-3">
                 <Button onClick={() => router.push("/dashboard")}>Go to dashboard →</Button>
-                <Button variant="secondary" onClick={() => router.push("/u/john-doe")}>See example</Button>
               </div>
               <p className="text-xs text-[#8a8a94] mt-4">You can edit everything later in Settings.</p>
             </div>

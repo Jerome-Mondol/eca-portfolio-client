@@ -12,8 +12,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const { success, error: toastError } = useToast();
-  const [email, setEmail] = useState("john@example.com");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

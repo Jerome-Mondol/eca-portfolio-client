@@ -4,8 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input, Textarea, Label } from "@/components/ui/input";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AIPage() {
+  const { user } = useAuth();
   const [active, setActive] = useState("certificate");
   const [projectInput, setProjectInput] = useState("I made a website for our college club using React. I worked with two friends and made the registration system.");
   const [showSuggestion, setShowSuggestion] = useState(false);
@@ -111,7 +113,7 @@ export default function AIPage() {
           <h3 className="font-semibold text-sm">AI Portfolio Summary</h3>
           <p className="text-xs text-[#6b6b76] mt-1">Generated from your actual data — clearly marked as AI draft.</p>
           <div className="mt-4 rounded-xl bg-[#f8f8f9] border border-[#e8e8ea] p-4">
-            <p className="text-sm leading-6">John is a computer science student with experience building web applications using modern JavaScript technologies. His portfolio includes software projects, technical courses, extracurricular leadership, and competitive programming activities.</p>
+            <p className="text-sm leading-6">{user?.fullName || "This student"} is a computer science student with experience building web applications using modern technologies. Portfolio includes software projects, technical courses, extracurricular leadership, and competitive activities.</p>
             <div className="mt-3 flex gap-2">
               <Button size="sm">Accept</Button><Button size="sm" variant="secondary">Edit</Button><Button size="sm" variant="ghost">Regenerate</Button>
             </div>

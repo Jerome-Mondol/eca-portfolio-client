@@ -7,6 +7,7 @@ import { Input, Label } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
+import { Select } from "@/components/ui/select";
 import { listDocumentsApi, createDocumentApi, deleteDocumentApi, type Document } from "@/lib/api";
 
 const categories = ["Certificates", "Projects", "Awards", "Other"] as const;
@@ -73,13 +74,11 @@ export default function DocumentsPage() {
             <Label>Filename *</Label>
             <Input value={filename} onChange={(e) => setFilename(e.target.value)} placeholder="cert.pdf" className="mt-1.5" />
           </div>
-          <div className="w-full sm:w-40">
+          <div className="w-full sm:w-44">
             <Label>Category</Label>
-            <select value={category} onChange={(e) => setCategory(e.target.value)} className="mt-1.5 w-full h-11 rounded-xl border border-[#e8e8ea] bg-white px-3 text-sm cursor-pointer">
-              {categories.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
+            <div className="mt-1.5">
+              <Select value={category} onChange={setCategory} options={[...categories]} />
+            </div>
           </div>
           <Button type="submit" className="w-full sm:w-auto min-h-[44px] cursor-pointer">Add</Button>
         </form>

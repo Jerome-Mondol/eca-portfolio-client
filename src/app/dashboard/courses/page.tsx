@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useToast } from "@/components/ui/toast";
+import { Select, SelectOption } from "@/components/ui/select";
 import { listCoursesApi, createCourseApi, updateCourseApi, deleteCourseApi, listCertificatesApi, type Course, type Certificate } from "@/lib/api";
 
 export default function CoursesPage() {
@@ -136,12 +137,20 @@ export default function CoursesPage() {
             </div>
             <div>
               <Label>Link certificate (optional)</Label>
-              <select value={linkedCertId} onChange={(e) => setLinkedCertId(e.target.value)} className="mt-1.5 w-full h-11 rounded-xl border border-[#e8e8ea] bg-white px-3 text-sm cursor-pointer">
-                <option value="">No certificate linked</option>
-                {certificates.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name} • {c.organization ?? ""}</option>
-                ))}
-              </select>
+              <div className="mt-1.5">
+                <Select
+                  value={linkedCertId}
+                  onChange={setLinkedCertId}
+                  options={[
+                    { value: "", label: "No certificate linked" },
+                    ...certificates.map((c) => ({
+                      value: c.id,
+                      label: `${c.name}${c.organization ? ` • ${c.organization}` : ""}`,
+                    })),
+                  ]}
+                  placeholder="Select a certificate"
+                />
+              </div>
               <p className="text-xs text-[#8a8a94] mt-1">Select a certificate to prove this course. You can link later.</p>
             </div>
             <div>

@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { listActivitiesApi, createActivityApi, updateActivityApi, deleteActivityApi, type Activity } from "@/lib/api";
 import { uploadImage } from "@/lib/upload";
 import { ImageSlider, ImageGridPreview } from "@/components/ui/image-slider";
+import { FileUploadCard } from "@/components/ui/file-upload";
 import { Upload, Loader2, X, Image as ImageIcon } from "lucide-react";
 
 export default function ECAPage() {
@@ -170,22 +171,15 @@ export default function ECAPage() {
             </div>
 
             <div>
-              <Label>Images (optional, max 5)</Label>
-              <div className="mt-1.5">
-                {images.length > 0 && (
-                  <div className="mb-3">
-                    <ImageSlider images={images} onRemove={(idx) => setImages(images.filter((_, i) => i !== idx))} editable />
-                  </div>
-                )}
-                <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
-                <div className="flex items-center gap-2">
-                  <Button type="button" variant="secondary" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading || images.length >= 5} className="cursor-pointer">
-                    {uploading ? <><Loader2 size={14} className="mr-1 animate-spin" /> Uploading...</> : <><Upload size={14} className="mr-1" /> Upload images</>}
-                  </Button>
-                  <span className="text-xs text-[#8a8a94]">{images.length}/5 • JPEG/PNG/WebP</span>
-                </div>
-                {images.length >= 5 && <p className="text-xs text-amber-600 mt-1">Max 5 images reached. Remove one to add more.</p>}
-              </div>
+              <Label className="mb-1.5 block">Activity Images (Max 5)</Label>
+              <FileUploadCard
+                values={images}
+                onAddImages={(newUrls) => setImages((prev) => [...prev, ...newUrls].slice(0, 5))}
+                onRemoveImage={(idx) => setImages((prev) => prev.filter((_, i) => i !== idx))}
+                maxFiles={5}
+                title="Upload activity photos or certificates"
+                subtitle="Upload photos, certificates, or proof of participation."
+              />
             </div>
 
             <Button type="submit" disabled={saving} className="w-full sm:w-auto cursor-pointer min-h-[44px]">
