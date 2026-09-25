@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useToast } from "@/components/ui/toast";
-import { listCertificatesApi, createCertificateApi, updateCertificateApi, deleteCertificateApi, type Certificate } from "@/lib/api";
+import { listCertificatesApi, createCertificateApi, updateCertificateApi, deleteCertificateApi, createDocumentApi, type Certificate } from "@/lib/api";
 import { getImageUrl } from "@/lib/upload";
 import { FileUploadCard } from "@/components/ui/file-upload";
 import { Loader2, FileText } from "lucide-react";
@@ -64,6 +64,18 @@ export default function CertificatesPage() {
         const res = await createCertificateApi(payload);
         setItems((v) => [res.data, ...v]);
         success("Certificate added");
+      }
+      if (documentKey) {
+        try {
+          const fname = documentKey.split("/").pop() || `${name.trim()}-proof`;
+          await createDocumentApi({
+            filename: fname,
+            originalName: fname,
+            storageKey: documentKey,
+            mimeType: documentKey.endsWith(".pdf") ? "application/pdf" : "image/jpeg",
+            category: "Certificates",
+          });
+        } catch {}
       }
       reset();
     } catch (err: any) {

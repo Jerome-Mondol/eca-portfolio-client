@@ -16,6 +16,7 @@ import {
   createAchievementApi,
   updateAchievementApi,
   deleteAchievementApi,
+  createDocumentApi,
   type Achievement,
 } from "@/lib/api";
 import { Select, SelectOption } from "@/components/ui/select";
@@ -170,6 +171,20 @@ export default function AchievementsPage() {
         const res = await createAchievementApi(payload);
         setItems((v) => [res.data, ...v]);
         success("Achievement added");
+      }
+      if (images && images.length > 0) {
+        for (const imgUrl of images) {
+          try {
+            const fname = imgUrl.split("/").pop() || `${title.trim()}-proof`;
+            await createDocumentApi({
+              filename: fname,
+              originalName: fname,
+              storageKey: imgUrl,
+              mimeType: imgUrl.endsWith(".pdf") ? "application/pdf" : "image/jpeg",
+              category: "Awards",
+            });
+          } catch {}
+        }
       }
       reset();
     } catch (err: any) {
