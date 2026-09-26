@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { loginApi, registerApi, logoutApi, meApi, handleGlobalLogout, isLoggingOut, type User } from "@/lib/api";
+import { loginApi, registerApi, logoutApi, meApi, isLoggingOut, warmAll, type User } from "@/lib/api";
 
 type AuthState = {
   user: User | null;
@@ -13,6 +13,16 @@ type AuthState = {
 };
 
 const AuthContext = createContext<AuthState | null>(null);
+
+function readCachedUser(): User | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("folio_user");
+    return raw ? (JSON.parse(raw) as User) : null;
+  } catch {
+    return null;
+  }
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -45,21 +55,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const handleLogoutEvent = () => {
       setUser(null);
     };
-    if (typeof window !== "undefined") {
-      window.addEventListener("auth:logout", handleLogoutEvent);
-    }
-    const cached = typeof window !== "undefined" ? localStorage.getItem("folio_user") : null;
+    window.addEventListener("auth:logout", handleLogoutEvent);
+
+    // Paint from the cached user immediately. The network check happens in the
+    // background, so the dashboard never waits on /api/auth/me to render.
+    const cached = readCachedUser();
     if (cached) {
-      try {
-        setUser(JSON.parse(cached));
-      } catch {}
+      setUser(cached);
+      setLoading(false);
     }
+
     refreshUser().finally(() => setLoading(false));
 
     return () => {
-      if (typeof window !== "undefined") {
-        window.removeEventListener("auth:logout", handleLogoutEvent);
-      }
+      window.removeEventListener("auth:logout", handleLogoutEvent);
     };
   }, [refreshUser]);
 
@@ -69,8 +78,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await loginApi({ email, password });
       setUser(data.user);
-      // Prefetch for near-instant navigation — warms client + server Redis cache
-      import("@/lib/api").then(({ prefetchAll }) => prefetchAll());
+      // Warm the resource store so the first navigation is a memory read.
+      warmAll();
     } catch (e: any) {
       setError(e.message ?? "Login failed");
       throw e;
@@ -85,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await registerApi(data);
       setUser(res.user);
-      import("@/lib/api").then(({ prefetchAll }) => prefetchAll());
+      warmAll();
     } catch (e: any) {
       setError(e.message ?? "Registration failed");
       throw e;

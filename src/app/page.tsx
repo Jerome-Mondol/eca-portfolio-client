@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { mockProjects, mockCertificates, mockUser } from "@/lib/mockData";
+import { Avatar } from "@/components/ui/avatar";
 import { Sparkles, ArrowUpRight, Check, Upload, Wand2, FileText, Trophy, Briefcase, GraduationCap, Layers, BarChart3, Award, FolderKanban } from "lucide-react";
 
 export default function Home() {
@@ -61,7 +62,7 @@ export default function Home() {
                 </div>
                 <div className="p-4 sm:p-6">
                   <div className="flex gap-4">
-                    <img src={mockUser.avatar} alt="John" className="h-14 w-14 rounded-2xl border border-[#e8e8ea] object-cover" />
+                    <Avatar name={mockUser.fullName || "John Doe"} className="h-14 w-14 rounded-2xl border border-[#e8e8ea]" />
                     <div className="min-w-0">
                       <h3 className="text-[18px] font-semibold tracking-tight">John Doe</h3>
                       <p className="text-[13px] text-[#6b6b76]">{mockUser.headline}</p>
@@ -162,7 +163,7 @@ export default function Home() {
         <div className="mt-6 rounded-[20px] sm:rounded-[24px] border border-[#e8e8ea] bg-white overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.06)]">
           <div className="grid lg:grid-cols-[280px_1fr] gap-0">
             <div className="p-6 border-b lg:border-b-0 lg:border-r border-[#f0f0f2] bg-[#fcfcfd]">
-              <img src={mockUser.avatar} alt="" className="h-16 w-16 rounded-2xl border border-[#e8e8ea]" />
+              <Avatar name={mockUser.fullName || "John Doe"} className="h-16 w-16 rounded-2xl border border-[#e8e8ea]" />
               <h3 className="mt-3 text-lg font-semibold">John Doe</h3>
               <p className="text-sm text-[#6b6b76]">Computer Science Student</p>
               <p className="text-xs text-[#8a8a94] mt-1">Dhaka, Bangladesh • BSc CSE</p>

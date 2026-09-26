@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,11 +8,19 @@ import { Input, Label, Textarea } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
-import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectOption } from "@/components/ui/select";
 import { listExperiencesApi, createExperienceApi, updateExperienceApi, deleteExperienceApi, type Experience } from "@/lib/api";
+import { useResource } from "@/lib/store";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Briefcase, GraduationCap, BookOpen, Sparkles, Palette, Users, HeartHandshake, Loader2, Plus, Pencil, Trash2 } from "lucide-react";
+
+// Split out of the page chunk — only fetched when the form is actually opened.
+const DatePicker = dynamic(() => import("@/components/ui/date-picker").then((m) => m.DatePicker), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[42px] w-full mt-1.5" />,
+});
+
+const EMPTY: Experience[] = [];
 
 const EXPERIENCE_CATEGORIES: SelectOption[] = [
   { value: "Job / Work Experience", label: "Job / Work Experience", icon: <Briefcase size={16} /> },
@@ -26,8 +35,9 @@ const EXPERIENCE_CATEGORIES: SelectOption[] = [
 export default function ExperiencePage() {
   const { success, error: toastError } = useToast();
   const { confirm: confirmModal } = useConfirm();
-  const [items, setItems] = useState<Experience[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Synchronous read from the warmed store — no skeleton on repeat visits.
+  const { data, loading } = useResource<{ data: Experience[] }>("experiences", listExperiencesApi);
+  const items = data?.data ?? EMPTY;
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Experience | null>(null);
   const [position, setPosition] = useState("");
@@ -41,18 +51,6 @@ export default function ExperiencePage() {
   const [skills, setSkills] = useState("");
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const fetchList = async () => {
-    try {
-      const res = await listExperiencesApi();
-      setItems(res.data);
-    } catch (e: any) {
-      toastError("Failed to load experiences", e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => { fetchList(); }, []);
 
   const reset = () => {
     setPosition("");
@@ -84,13 +82,12 @@ export default function ExperiencePage() {
       skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
     };
     try {
+      // The API helpers write the new list straight into the store.
       if (editing) {
-        const res = await updateExperienceApi(editing.id, payload);
-        setItems((v) => v.map((x) => (x.id === editing.id ? res.data : x)));
+        await updateExperienceApi(editing.id, payload);
         success("Experience updated");
       } else {
-        const res = await createExperienceApi(payload);
-        setItems((v) => [res.data, ...v]);
+        await createExperienceApi(payload);
         success("Experience added");
       }
       reset();
@@ -125,7 +122,6 @@ export default function ExperiencePage() {
     setDeletingId(id);
     try {
       await deleteExperienceApi(id);
-      setItems((v) => v.filter((x) => x.id !== id));
       success("Deleted");
     } catch (e: any) {
       toastError("Delete failed", e.message);

@@ -1,5 +1,4 @@
 "use client";
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -7,26 +6,12 @@ import Link from "next/link";
 import { ArrowUpRight, FolderKanban, Award, Briefcase, Trophy } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { getDashboardSummaryApi, type DashboardSummary } from "@/lib/api";
+import { useResource } from "@/lib/store";
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [summary, setSummary] = useState<DashboardSummary | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let mounted = true;
-    // Use cached dashboard summary — near instant on second visit (30s cache + server Redis HIT)
-    getDashboardSummaryApi()
-      .then((data) => {
-        if (!mounted) return;
-        setSummary(data);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-    return () => { mounted = false; };
-  }, []);
+  // Reads from the warmed store, so a revisit paints immediately with no fetch.
+  const { data: summary, loading } = useResource<DashboardSummary>("dashboard", getDashboardSummaryApi);
 
   const completion = summary?.completion ?? 0;
   const stats = summary ?? { projects: 0, certificates: 0, activities: 0, courses: 0, experiences: 0, achievements: 0, skills: 0, documents: 0, featured: 0, profileDone: false, hasPhoto: false };

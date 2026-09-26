@@ -7,15 +7,20 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/toast";
-import { getProfileApi, updateProfileApi } from "@/lib/api";
+import { getProfileApi, updateProfileApi, type Profile, type User } from "@/lib/api";
+import { useResource } from "@/lib/store";
 import { uploadImage, getImageUrl } from "@/lib/upload";
 import { Select } from "@/components/ui/select";
+import { Avatar } from "@/components/ui/avatar";
 import { Copy, Check, Upload, ExternalLink, MapPin, GraduationCap, Code2, Link2, Globe, Camera, Video, Palette, FileText, Users, Bird, Plus, Trash2, Loader2 } from "lucide-react";
+
+type ProfileResponse = { user: User | null; profile: Profile };
 
 export default function ProfilePage() {
   const { user, refreshUser } = useAuth();
   const { success, error: toastError } = useToast();
-  const [loading, setLoading] = useState(true);
+  // Synchronous read from the warmed store — no skeleton on repeat visits.
+  const { data, loading } = useResource<ProfileResponse>("profile", getProfileApi);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -34,8 +39,13 @@ export default function ProfilePage() {
   const [copied, setCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const portfolioUrl = typeof window !== "undefined" ? `${window.location.origin}/u/${user?.username ?? ""}` : `/u/${user?.username ?? ""}`;
-  const portfolioPath = `folio.com/u/${user?.username ?? ""}`;
+  // Read window lazily so the server render and the client render agree.
+  const [origin, setOrigin] = useState("");
+  useEffect(() => setOrigin(window.location.origin), []);
+
+  const username = user?.username ?? data?.user?.username ?? "";
+  const portfolioUrl = origin ? `${origin}/u/${username}` : `/u/${username}`;
+  const portfolioPath = `folio.com/u/${username}`;
 
   const platformOptions = [
     "GitHub",
@@ -85,22 +95,24 @@ export default function ProfilePage() {
     return arr;
   };
 
+  // Hydrate the editable fields once, when the profile first arrives. The
+  // skeleton is skipped entirely if the store already had it warm.
+  const hydratedFor = useRef<string | null>(null);
   useEffect(() => {
-    getProfileApi()
-      .then(({ user: u, profile }) => {
-        setFullName(u?.fullName ?? user?.fullName ?? "");
-        setHeadline(profile.headline ?? "");
-        setBio(profile.bio ?? "");
-        setLocation(profile.location ?? "");
-        setDegree((profile.education as any)?.degree ?? "");
-        setInstitution((profile.education as any)?.institution ?? "");
-        setInterests(profile.interests ?? []);
-        setSocials(normalizeSocials(profile.socials));
-        setAvatarKey(profile.avatarKey ?? null);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [user?.fullName, user?.username]);
+    if (!data) return;
+    const key = data.user?.id ?? user?.id ?? "anon";
+    if (hydratedFor.current === key) return;
+    hydratedFor.current = key;
+    setFullName(data.user?.fullName ?? user?.fullName ?? "");
+    setHeadline(data.profile?.headline ?? "");
+    setBio(data.profile?.bio ?? "");
+    setLocation(data.profile?.location ?? "");
+    setDegree((data.profile?.education as any)?.degree ?? "");
+    setInstitution((data.profile?.education as any)?.institution ?? "");
+    setInterests(data.profile?.interests ?? []);
+    setSocials(normalizeSocials(data.profile?.socials));
+    setAvatarKey(data.profile?.avatarKey ?? null);
+  }, [data, user?.fullName]);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -189,8 +201,9 @@ export default function ProfilePage() {
         socials, // array of {platform, url} — works for any platform (tech or not)
         avatarKey: avatarKey || null,
       } as any);
-      await refreshUser();
       success("Profile saved");
+      // Refresh the header name in the background — don't block the toast on it.
+      refreshUser();
     } catch (e: any) {
       toastError("Save failed", e.message);
     } finally {
@@ -210,7 +223,7 @@ export default function ProfilePage() {
     );
   }
 
-  const avatarSrc = avatarKey ? getImageUrl(avatarKey) : `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(fullName || user?.username || "JD")}`;
+  const avatarSrc = avatarKey ? getImageUrl(avatarKey) : null;
 
   return (
     <div className="space-y-6">
@@ -231,7 +244,7 @@ export default function ProfilePage() {
           <Card className="p-5">
             <div className="flex flex-col items-center text-center">
               <div className="relative group">
-                <img src={avatarSrc} alt="avatar" className="h-32 w-32 sm:h-36 sm:w-36 rounded-2xl border border-[#e8e8ea] bg-white object-cover shadow-sm" />
+                <Avatar src={avatarSrc} name={fullName || user?.username || "JD"} className="h-32 w-32 sm:h-36 sm:w-36 rounded-2xl border border-[#e8e8ea] shadow-sm" ratio={0.36} />
                 <button
                   onClick={() => fileRef.current?.click()}
                   disabled={uploading}

@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/toast";
 import { AddSheet } from "@/components/AddSheet";
+import { Avatar } from "@/components/ui/avatar";
+import { warmAll } from "@/lib/api";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -16,28 +18,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { success, error: toastError } = useToast();
   const router = useRouter();
 
-  // Redirect to login if not authenticated (after loading)
+  // Warm every dashboard resource once we're authenticated, so clicking between
+  // pages is a memory read rather than a network round trip.
+  // Also redirects to login when there is genuinely no session.
   useEffect(() => {
-    if (!loading) {
-      const token = typeof window !== "undefined" ? localStorage.getItem("folio_access") : null;
-      if (!user && !token) {
-        // Use window.location.replace for a clean redirect (avoids Next.js router race)
-        window.location.replace("/login");
-      }
+    if (loading) return;
+    const token = window.localStorage.getItem("folio_access");
+    if (!user && !token) {
+      // Use window.location.replace for a clean redirect (avoids Next.js router race)
+      window.location.replace("/login");
+      return;
     }
+    if (user) warmAll();
   }, [loading, user]);
-
-  const token = typeof window !== "undefined" ? localStorage.getItem("folio_access") : null;
-  if (loading || (!user && !token)) {
-    return (
-      <div className="min-h-screen bg-[#fcfcfd] flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="h-8 w-8 rounded-full border-2 border-[#111827] border-t-transparent animate-spin mx-auto" />
-          <p className="text-sm text-[#6b6b76]">{loading ? "Loading..." : "Redirecting to login..."}</p>
-        </div>
-      </div>
-    );
-  }
 
   const handleLogout = async () => {
     try {
@@ -48,6 +41,18 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       toastError("Logout failed", e.message);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#fcfcfd] flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="h-8 w-8 rounded-full border-2 border-[#111827] border-t-transparent animate-spin mx-auto" />
+          <p className="text-sm text-[#6b6b76]">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#fcfcfd] flex">
       <Sidebar />
@@ -93,36 +98,18 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               </button>
               {user ? (
                 <div className="hidden sm:flex items-center gap-2">
-                  <img
-                    src={`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(user.fullName || user.username)}`}
-                    alt={user.fullName}
-                    className="h-11 w-11 shrink-0 rounded-full border border-[#e8e8ea] object-cover bg-white"
-                    width={44}
-                    height={44}
-                  />
+                  <Avatar name={user.fullName || user.username} className="h-11 w-11 shrink-0 rounded-full border border-[#e8e8ea]" />
                   <button onClick={handleLogout} className="h-11 w-11 shrink-0 rounded-full border border-[#e8e8ea] bg-white flex items-center justify-center hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition" aria-label="Log out">
                     <LogOut size={16} />
                   </button>
                 </div>
               ) : (
-                <img
-                  src="https://api.dicebear.com/9.x/initials/svg?seed=User"
-                  alt="avatar"
-                  className="h-11 w-11 shrink-0 rounded-full border border-[#e8e8ea] object-cover bg-white"
-                  width={44}
-                  height={44}
-                />
+                <Avatar name="User" className="h-11 w-11 shrink-0 rounded-full border border-[#e8e8ea]" />
               )}
               {/* mobile avatar */}
               {user && (
                 <div className="sm:hidden flex items-center gap-2">
-                  <img
-                    src={`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(user.fullName || user.username)}`}
-                    alt={user.fullName}
-                    className="h-11 w-11 shrink-0 rounded-full border border-[#e8e8ea] object-cover bg-white"
-                    width={44}
-                    height={44}
-                  />
+                  <Avatar name={user.fullName || user.username} className="h-11 w-11 shrink-0 rounded-full border border-[#e8e8ea]" />
                 </div>
               )}
             </div>

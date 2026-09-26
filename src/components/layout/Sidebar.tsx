@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/toast";
+import { Avatar } from "@/components/ui/avatar";
 import {
   LayoutDashboard,
   User,
@@ -42,24 +43,10 @@ export function Sidebar() {
   const { user, logout } = useAuth();
   const { success } = useToast();
 
-  const prefetch = (href: string) => {
-    import("@/lib/api").then((api) => {
-      if (href === "/dashboard") api.getDashboardSummaryApi().catch(() => {});
-      else if (href === "/dashboard/profile") api.getProfileApi().catch(() => {});
-      else if (href === "/dashboard/projects") api.listProjectsApi().catch(() => {});
-      else if (href === "/dashboard/experience") api.listExperiencesApi().catch(() => {});
-      else if (href === "/dashboard/eca") api.listActivitiesApi().catch(() => {});
-      else if (href === "/dashboard/courses") api.listCoursesApi().catch(() => {});
-      else if (href === "/dashboard/certificates") api.listCertificatesApi().catch(() => {});
-      else if (href === "/dashboard/achievements") api.listAchievementsApi().catch(() => {});
-      else if (href === "/dashboard/skills") api.listSkillsApi().catch(() => {});
-      else if (href === "/dashboard/documents") api.listDocumentsApi().catch(() => {});
-    });
-  };
   return (
     <aside className="hidden lg:flex w-[260px] shrink-0 flex-col border-r border-[#ececef] bg-white sticky top-0 h-screen overflow-y-auto">
       <div className="h-[56px] flex items-center gap-2 px-5 border-b border-[#ececef] shrink-0">
-        <div className="h-7 w-7 rounded-lg bg-[#111827] flex items-center justify-center text-white text-[13px] font-bold">◈</div>
+        <div className="h-7 w-7 rounded-lg bg-[#111827] flex items-center justify-center text-[13px] font-bold">◈</div>
         <span className="text-[15px] font-semibold tracking-tight">folio</span>
         <span className="ml-auto text-xs text-[#8a8a94]">v1.0</span>
       </div>
@@ -70,8 +57,8 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              onMouseEnter={() => prefetch(item.href)}
-              onFocus={() => prefetch(item.href)}
+              // The resource store is warmed on shell mount, so data is already
+              // in memory. Prefetching the route instead makes the click instant.
               prefetch
               className={cn(
                 "flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13.5px] font-medium transition cursor-pointer",
@@ -87,7 +74,7 @@ export function Sidebar() {
       <div className="p-4 border-t border-[#ececef] space-y-3">
         {user && (
           <div className="flex items-center gap-2.5 rounded-xl bg-[#f8f8f9] border border-[#e8e8ea] p-2.5">
-            <img src={`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(user.fullName || user.username)}`} alt={user.fullName} className="h-8 w-8 rounded-full border border-[#e8e8ea] bg-white" />
+            <Avatar name={user.fullName || user.username} className="h-8 w-8 rounded-full border border-[#e8e8ea]" ratio={0.45} />
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold truncate">{user.fullName}</p>
               <p className="text-xs text-[#6b6b76] truncate">@{user.username}</p>
@@ -118,3 +105,4 @@ export function Sidebar() {
     </aside>
   );
 }
+

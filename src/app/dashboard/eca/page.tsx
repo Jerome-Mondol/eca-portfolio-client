@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,16 +10,25 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { listActivitiesApi, createActivityApi, updateActivityApi, deleteActivityApi, type Activity } from "@/lib/api";
+import { useResource } from "@/lib/store";
 import { uploadImage } from "@/lib/upload";
 import { ImageSlider, ImageGridPreview } from "@/components/ui/image-slider";
-import { FileUploadCard } from "@/components/ui/file-upload";
 import { Upload, Loader2, X, Image as ImageIcon } from "lucide-react";
+
+// Split out of the page chunk — only fetched when the form is actually opened.
+const FileUploadCard = dynamic(() => import("@/components/ui/file-upload").then((m) => m.FileUploadCard), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[188px] w-full" />,
+});
+
+const EMPTY: Activity[] = [];
 
 export default function ECAPage() {
   const { success, error: toastError } = useToast();
   const { confirm: confirmModal } = useConfirm();
-  const [items, setItems] = useState<Activity[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Synchronous read from the warmed store — no skeleton on repeat visits.
+  const { data, loading } = useResource<{ data: Activity[] }>("activities", listActivitiesApi);
+  const items = data?.data ?? EMPTY;
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Activity | null>(null);
   const [activityName, setActivityName] = useState("");
@@ -31,18 +41,6 @@ export default function ECAPage() {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-
-  const fetchList = async () => {
-    try {
-      const res = await listActivitiesApi();
-      setItems(res.data);
-    } catch (e: any) {
-      toastError("Failed to load ECA", e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => { fetchList(); }, []);
 
   const reset = () => {
     setActivityName(""); setCategory(""); setOrganization(""); setRole(""); setDescription(""); setSkills(""); setImages([]); setEditing(null); setShowForm(false);
@@ -89,13 +87,12 @@ export default function ECAPage() {
       images: images.length > 0 ? images : null,
     };
     try {
+      // The API helpers write the new list straight into the store.
       if (editing) {
-        const res = await updateActivityApi(editing.id, payload);
-        setItems((v) => v.map((x) => (x.id === editing.id ? res.data : x)));
+        await updateActivityApi(editing.id, payload);
         success("ECA updated");
       } else {
-        const res = await createActivityApi(payload);
-        setItems((v) => [res.data, ...v]);
+        await createActivityApi(payload);
         success("ECA added");
       }
       reset();
@@ -127,7 +124,6 @@ export default function ECAPage() {
     if (!isConfirmed) return;
     try {
       await deleteActivityApi(id);
-      setItems((v) => v.filter((x) => x.id !== id));
       success("Deleted");
     } catch (e: any) {
       toastError("Delete failed", e.message);

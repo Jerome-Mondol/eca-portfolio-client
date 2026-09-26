@@ -1,24 +1,36 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DatePicker } from "@/components/ui/date-picker";
 import { useToast } from "@/components/ui/toast";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Select, SelectOption } from "@/components/ui/select";
 import { listCoursesApi, createCourseApi, updateCourseApi, deleteCourseApi, listCertificatesApi, type Course, type Certificate } from "@/lib/api";
+import { useResource } from "@/lib/store";
 import { Loader2 } from "lucide-react";
+
+// Split out of the page chunk — only fetched when the form is actually opened.
+const DatePicker = dynamic(() => import("@/components/ui/date-picker").then((m) => m.DatePicker), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[42px] w-full mt-1.5" />,
+});
+
+const EMPTY_COURSES: Course[] = [];
+const EMPTY_CERTS: Certificate[] = [];
 
 export default function CoursesPage() {
   const { success, error: toastError } = useToast();
   const { confirm: confirmModal } = useConfirm();
-  const [items, setItems] = useState<Course[]>([]);
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Two synchronous store reads — both are warmed on shell mount.
+  const { data: coursesData, loading } = useResource<{ data: Course[] }>("courses", listCoursesApi);
+  const { data: certsData } = useResource<{ data: Certificate[] }>("certificates", listCertificatesApi);
+  const items = coursesData?.data ?? EMPTY_COURSES;
+  const certificates = certsData?.data ?? EMPTY_CERTS;
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Course | null>(null);
   const [name, setName] = useState("");
@@ -30,19 +42,6 @@ export default function CoursesPage() {
   const [completionDate, setCompletionDate] = useState("");
   const [linkedCertId, setLinkedCertId] = useState<string>("");
   const [saving, setSaving] = useState(false);
-
-  const fetchAll = async () => {
-    try {
-      const [coursesRes, certsRes] = await Promise.all([listCoursesApi().catch(() => ({ data: [] as Course[] })), listCertificatesApi().catch(() => ({ data: [] as Certificate[] }))]);
-      setItems(coursesRes.data);
-      setCertificates(certsRes.data);
-    } catch (e: any) {
-      toastError("Failed to load", e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => { fetchAll(); }, []);
 
   const reset = () => { setName(""); setProvider(""); setInstructor(""); setDescription(""); setSkills(""); setStartDate(""); setCompletionDate(""); setLinkedCertId(""); setEditing(null); setShowForm(false); };
 
@@ -61,13 +60,12 @@ export default function CoursesPage() {
       certificateId: linkedCertId || null,
     };
     try {
+      // The API helpers write the new list straight into the store.
       if (editing) {
-        const res = await updateCourseApi(editing.id, payload);
-        setItems((v) => v.map((x) => (x.id === editing.id ? res.data : x)));
+        await updateCourseApi(editing.id, payload);
         success("Course updated");
       } else {
-        const res = await createCourseApi(payload);
-        setItems((v) => [res.data, ...v]);
+        await createCourseApi(payload);
         success("Course added");
       }
       reset();
@@ -100,7 +98,6 @@ export default function CoursesPage() {
     if (!isConfirmed) return;
     try {
       await deleteCourseApi(id);
-      setItems((v) => v.filter((x) => x.id !== id));
       success("Deleted");
     } catch (e: any) {
       toastError("Delete failed", e.message);

@@ -1,24 +1,37 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input, Label } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DatePicker } from "@/components/ui/date-picker";
 import { useToast } from "@/components/ui/toast";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { listCertificatesApi, createCertificateApi, updateCertificateApi, deleteCertificateApi, createDocumentApi, type Certificate } from "@/lib/api";
+import { useResource } from "@/lib/store";
 import { getImageUrl } from "@/lib/upload";
-import { FileUploadCard } from "@/components/ui/file-upload";
 import { Loader2, FileText } from "lucide-react";
+
+// Split out of the page chunk — only fetched when the form is actually opened.
+const DatePicker = dynamic(() => import("@/components/ui/date-picker").then((m) => m.DatePicker), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[42px] w-full mt-1.5" />,
+});
+const FileUploadCard = dynamic(() => import("@/components/ui/file-upload").then((m) => m.FileUploadCard), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[188px] w-full" />,
+});
+
+const EMPTY: Certificate[] = [];
 
 export default function CertificatesPage() {
   const { success, error: toastError } = useToast();
   const { confirm: confirmModal } = useConfirm();
-  const [items, setItems] = useState<Certificate[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Synchronous read from the warmed store — no skeleton on repeat visits.
+  const { data, loading } = useResource<{ data: Certificate[] }>("certificates", listCertificatesApi);
+  const items = data?.data ?? EMPTY;
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Certificate | null>(null);
   const [name, setName] = useState("");
@@ -31,17 +44,6 @@ export default function CertificatesPage() {
   const [documentName, setDocumentName] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const fetchList = async () => {
-    try {
-      const res = await listCertificatesApi();
-      setItems(res.data);
-    } catch (e: any) {
-      toastError("Failed to load certificates", e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => { fetchList(); }, []);
 
   const reset = () => { setName(""); setOrg(""); setIssueDate(""); setCredentialId(""); setCredentialUrl(""); setSkills(""); setDocumentKey(null); setDocumentName(null); setEditing(null); setShowForm(false); };
 
@@ -60,13 +62,12 @@ export default function CertificatesPage() {
       documentName: documentName || null,
     };
     try {
+      // The API helpers write the new list straight into the store.
       if (editing) {
-        const res = await updateCertificateApi(editing.id, payload);
-        setItems((v) => v.map((x) => (x.id === editing.id ? res.data : x)));
+        await updateCertificateApi(editing.id, payload);
         success("Certificate updated");
       } else {
-        const res = await createCertificateApi(payload);
-        setItems((v) => [res.data, ...v]);
+        await createCertificateApi(payload);
         success("Certificate added");
       }
       if (documentKey) {
@@ -111,7 +112,6 @@ export default function CertificatesPage() {
     if (!isConfirmed) return;
     try {
       await deleteCertificateApi(id);
-      setItems((v) => v.filter((x) => x.id !== id));
       success("Deleted");
     } catch (e: any) {
       toastError("Delete failed", e.message);

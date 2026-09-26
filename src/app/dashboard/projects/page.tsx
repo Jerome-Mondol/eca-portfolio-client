@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
@@ -8,12 +9,20 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { listProjectsApi, createProjectApi, deleteProjectApi, updateProjectApi, verifyProjectLinkApi, type Project } from "@/lib/api";
+import { useResource } from "@/lib/store";
 import { getImageUrl } from "@/lib/upload";
-import { FileUploadCard } from "@/components/ui/file-upload";
 import { Select, SelectOption } from "@/components/ui/select";
 import { Trash2, Plus, Globe, Code2, Link2, Bird, Users, Camera, Video, Palette, FileText, GraduationCap, CheckCircle2, AlertCircle, Loader2, ShieldCheck } from "lucide-react";
 
 import { useConfirm } from "@/components/ui/confirm-dialog";
+
+// Split out of the page chunk — only fetched when the form is actually opened.
+const FileUploadCard = dynamic(() => import("@/components/ui/file-upload").then((m) => m.FileUploadCard), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[188px] w-full" />,
+});
+
+const EMPTY: Project[] = [];
 
 const platformOptions = ["GitHub", "LinkedIn", "Website", "Twitter", "Facebook", "Instagram", "YouTube", "Behance", "Dribbble", "Other"];
 
@@ -33,8 +42,9 @@ const getIcon = (platform: string, size = 12) => {
 export default function ProjectsPage() {
   const { success, error: toastError } = useToast();
   const { confirm } = useConfirm();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Synchronous read from the warmed store — no spinner on repeat visits.
+  const { data, loading } = useResource<{ data: Project[] }>("projects", listProjectsApi);
+  const projects = data?.data ?? EMPTY;
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
   const [title, setTitle] = useState("");
@@ -75,18 +85,6 @@ export default function ProjectsPage() {
 
     return () => clearTimeout(timer);
   }, [newUrl]);
-
-  const fetchList = async () => {
-    try {
-      const res = await listProjectsApi();
-      setProjects(res.data as any);
-    } catch (e: any) {
-      toastError("Failed to load projects", e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => { fetchList(); }, []);
 
   const resetForm = () => {
     setTitle(""); setDescription(""); setTech(""); setCoverImage(null); setLinks([]); setNewPlatform("GitHub"); setNewUrl(""); setNewCustom(""); setFeatured(false); setShowOnPortfolio(true); setEditing(null); setShowForm(false); setVerifyResult(null); setVerifying(false);
@@ -133,13 +131,13 @@ export default function ProjectsPage() {
 
     setSaving(true);
     try {
+      // createProjectApi / updateProjectApi write the new list straight into the
+      // store, so the grid updates without a refetch.
       if (editing) {
-        const res = await updateProjectApi(editing.id, payload);
-        setProjects((p) => p.map((x) => (x.id === editing.id ? (res.data as any) : x)));
+        await updateProjectApi(editing.id, payload);
         success("Project updated");
       } else {
-        const res = await createProjectApi(payload);
-        setProjects((p) => [(res.data as any), ...p]);
+        await createProjectApi(payload);
         success("Project added");
       }
       resetForm();
@@ -179,7 +177,6 @@ export default function ProjectsPage() {
     if (!isConfirmed) return;
     try {
       await deleteProjectApi(id);
-      setProjects((p) => p.filter((x) => x.id !== id));
       success("Project deleted");
     } catch (e: any) {
       toastError("Delete failed", e.message);

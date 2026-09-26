@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,36 +10,28 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
 import { Select } from "@/components/ui/select";
 import { listSkillsApi, createSkillApi, deleteSkillApi, type Skill } from "@/lib/api";
+import { useResource } from "@/lib/store";
 
 const categories = ["Technical", "Creative", "Leadership", "Communication", "Languages", "Other"] as const;
 
+const EMPTY: Skill[] = [];
+
 export default function SkillsPage() {
   const { success, error: toastError } = useToast();
-  const [items, setItems] = useState<Skill[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Synchronous read from the warmed store — no skeleton on repeat visits.
+  const { data, loading } = useResource<{ data: Skill[] }>("skills", listSkillsApi);
+  const items = data?.data ?? EMPTY;
   const [name, setName] = useState("");
   const [category, setCategory] = useState<string>("Technical");
   const [saving, setSaving] = useState(false);
-
-  const fetchList = async () => {
-    try {
-      const res = await listSkillsApi();
-      setItems(res.data);
-    } catch (e: any) {
-      toastError("Failed to load skills", e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => { fetchList(); }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) { toastError("Name required"); return; }
     setSaving(true);
     try {
-      const res = await createSkillApi({ name: name.trim(), category });
-      setItems((v) => [res.data, ...v]);
+      // createSkillApi writes the new list straight into the store.
+      await createSkillApi({ name: name.trim(), category });
       setName("");
       success("Skill added");
     } catch (err: any) {
@@ -52,7 +44,6 @@ export default function SkillsPage() {
   const handleDelete = async (id: string) => {
     try {
       await deleteSkillApi(id);
-      setItems((v) => v.filter((x) => x.id !== id));
       success("Deleted");
     } catch (e: any) {
       toastError("Delete failed", e.message);

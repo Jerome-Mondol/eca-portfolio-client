@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/AuthContext";
+import { Avatar } from "@/components/ui/avatar";
 
 const defaultSections = ["Hero / Introduction", "About", "Experience", "Projects", "ECA / Activities", "Courses & Certificates", "Achievements", "Skills", "Education", "Contact"];
 
@@ -89,7 +90,7 @@ export default function PortfolioEditorPage() {
           </div>
           <div className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row gap-4">
-              <img src={`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(user?.fullName || user?.username || "User")}`} alt="Avatar" className="h-16 w-16 rounded-2xl border shrink-0 object-cover" width={64} height={64} />
+              <Avatar name={user?.fullName || user?.username || "User"} className="h-16 w-16 rounded-2xl border shrink-0" ratio={0.36} />
               <div className="min-w-0">
                 <h2 className="text-lg font-semibold">{user?.fullName || "Your Name"}</h2>
                 <p className="text-sm text-[#6b6b76]">Computer Science Student</p>

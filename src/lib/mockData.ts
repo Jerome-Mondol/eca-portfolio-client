@@ -1,11 +1,11 @@
 export const mockUser = {
   name: "John Doe",
+  fullName: "John Doe",
   username: "john-doe",
   headline: "Computer Science Student • Developer • Builder",
   bio: "Computer Science student at University of Dhaka passionate about building web applications with modern JavaScript. Led 35-member robotics club and shipped 8+ projects.",
   location: "Dhaka, Bangladesh",
   education: "BSc in Computer Science, University of Dhaka",
-  avatar: "https://api.dicebear.com/9.x/initials/svg?seed=John%20Doe",
   interests: ["Software Development", "AI", "Robotics", "Leadership"],
   socials: {
     github: "github.com/john-doe",

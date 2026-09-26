@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,10 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
 import { useConfirm } from "@/components/ui/confirm-dialog";
-import { DatePicker } from "@/components/ui/date-picker";
 import { ImageSlider, ImageGridPreview } from "@/components/ui/image-slider";
 import { uploadImage } from "@/lib/upload";
-import { FileUploadCard } from "@/components/ui/file-upload";
 import {
   listAchievementsApi,
   createAchievementApi,
@@ -20,6 +19,7 @@ import {
   createDocumentApi,
   type Achievement,
 } from "@/lib/api";
+import { useResource } from "@/lib/store";
 import { Select, SelectOption } from "@/components/ui/select";
 import {
   Upload,
@@ -37,6 +37,18 @@ import {
   Tag,
 } from "lucide-react";
 
+// Split out of the page chunk — only fetched when the form is actually opened.
+const DatePicker = dynamic(() => import("@/components/ui/date-picker").then((m) => m.DatePicker), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[42px] w-full mt-1.5" />,
+});
+const FileUploadCard = dynamic(() => import("@/components/ui/file-upload").then((m) => m.FileUploadCard), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[188px] w-full" />,
+});
+
+const EMPTY: Achievement[] = [];
+
 const CATEGORIES: SelectOption[] = [
   { value: "Competition", label: "Competition", icon: <Trophy size={15} /> },
   { value: "Award", label: "Award", icon: <Award size={15} /> },
@@ -51,8 +63,9 @@ const CATEGORIES: SelectOption[] = [
 export default function AchievementsPage() {
   const { success, error: toastError } = useToast();
   const { confirm: confirmModal } = useConfirm();
-  const [items, setItems] = useState<Achievement[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Synchronous read from the warmed store — no skeleton on repeat visits.
+  const { data, loading } = useResource<{ data: Achievement[] }>("achievements", listAchievementsApi);
+  const items = data?.data ?? EMPTY;
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Achievement | null>(null);
 
@@ -68,21 +81,6 @@ export default function AchievementsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fileRef = useRef<HTMLInputElement>(null);
-
-  const fetchList = async () => {
-    try {
-      const res = await listAchievementsApi();
-      setItems(res.data);
-    } catch (e: any) {
-      toastError("Failed to load achievements", e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchList();
-  }, []);
 
   const reset = () => {
     setTitle("");
@@ -117,7 +115,6 @@ export default function AchievementsPage() {
     setDeletingId(id);
     try {
       await deleteAchievementApi(id);
-      setItems((v) => v.filter((x) => x.id !== id));
       success("Achievement deleted");
     } catch (e: any) {
       toastError("Delete failed", e.message);
@@ -171,13 +168,12 @@ export default function AchievementsPage() {
       images: images.length > 0 ? images : null,
     };
     try {
+      // The API helpers write the new list straight into the store.
       if (editing) {
-        const res = await updateAchievementApi(editing.id, payload);
-        setItems((v) => v.map((x) => (x.id === editing.id ? res.data : x)));
+        await updateAchievementApi(editing.id, payload);
         success("Achievement updated");
       } else {
-        const res = await createAchievementApi(payload);
-        setItems((v) => [res.data, ...v]);
+        await createAchievementApi(payload);
         success("Achievement added");
       }
       if (images && images.length > 0) {

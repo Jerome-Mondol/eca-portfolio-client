@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,17 +9,17 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Select, SelectOption } from "@/components/ui/select";
-import { FileUploadCard } from "@/components/ui/file-upload";
 import { getImageUrl } from "@/lib/upload";
 import {
-  listDocumentsApi,
   createDocumentApi,
   deleteDocumentApi,
+  listDocumentsApi,
   listCertificatesApi,
   listAchievementsApi,
   listProjectsApi,
   type Document,
 } from "@/lib/api";
+import { useResource } from "@/lib/store";
 import {
   FileText,
   Award,
@@ -31,6 +32,12 @@ import {
   Loader2,
   Filter,
 } from "lucide-react";
+
+// Split out of the page chunk — only fetched when the form is actually opened.
+const FileUploadCard = dynamic(() => import("@/components/ui/file-upload").then((m) => m.FileUploadCard), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[188px] w-full" />,
+});
 
 const CATEGORIES: SelectOption[] = [
   { value: "Certificates", label: "Certificates", icon: <Award size={15} /> },
@@ -54,8 +61,13 @@ export interface UnifiedDocument {
 export default function DocumentsPage() {
   const { success, error: toastError } = useToast();
   const { confirm: confirmModal } = useConfirm();
-  const [items, setItems] = useState<UnifiedDocument[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Four synchronous store reads — all warmed on shell mount, so the aggregated
+  // list renders on the first frame instead of after four round trips.
+  const { data: docsData, loading: docsLoading } = useResource<{ data: Document[] }>("documents", listDocumentsApi);
+  const { data: certsData } = useResource<{ data: any[] }>("certificates", listCertificatesApi);
+  const { data: achsData } = useResource<{ data: any[] }>("achievements", listAchievementsApi);
+  const { data: projsData } = useResource<{ data: any[] }>("projects", listProjectsApi);
+  const loading = docsLoading;
   const [showForm, setShowForm] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [uploadedOriginalName, setUploadedOriginalName] = useState<string>("");
@@ -65,95 +77,78 @@ export default function DocumentsPage() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const fetchAllDocs = async () => {
-    try {
-      const [docsRes, certsRes, achsRes, projsRes] = await Promise.all([
-        listDocumentsApi().catch(() => ({ data: [] })),
-        listCertificatesApi().catch(() => ({ data: [] })),
-        listAchievementsApi().catch(() => ({ data: [] })),
-        listProjectsApi().catch(() => ({ data: [] })),
-      ]);
+  const items = useMemo<UnifiedDocument[]>(() => {
+    const list: UnifiedDocument[] = [];
 
-      const list: UnifiedDocument[] = [];
+    // Manual / Direct Upload Documents
+    (docsData?.data ?? []).forEach((d) => {
+      const fileUrl = (d as any).storageKey || (d as any).fileKey || d.filename || "";
+      list.push({
+        id: d.id,
+        filename: d.filename || d.originalName || "Document",
+        category: d.category || "Other",
+        url: getImageUrl(fileUrl),
+        mimeType: d.mimeType || (fileUrl.endsWith(".pdf") ? "application/pdf" : "image/jpeg"),
+        fileSize: d.fileSize || undefined,
+        source: "document",
+        createdAt: d.createdAt,
+      });
+    });
 
-      // Manual / Direct Upload Documents
-      docsRes.data.forEach((d: any) => {
-        const fileUrl = d.storageKey || d.fileKey || d.filename || "";
+    // Certificates with proofs
+    (certsData?.data ?? []).forEach((c) => {
+      if (c.documentKey) {
+        const fname = c.name ? `${c.name} (Certificate)` : "Certificate Proof";
         list.push({
-          id: d.id,
-          filename: d.filename || d.originalName || "Document",
-          category: d.category || "Other",
-          url: getImageUrl(fileUrl),
-          mimeType: d.mimeType || (fileUrl.endsWith(".pdf") ? "application/pdf" : "image/jpeg"),
-          fileSize: d.fileSize || undefined,
-          source: "document",
-          createdAt: d.createdAt,
+          id: `cert-${c.id}`,
+          filename: fname,
+          category: "Certificates",
+          url: getImageUrl(c.documentKey),
+          mimeType: c.documentKey.endsWith(".pdf") ? "application/pdf" : "image/jpeg",
+          source: "certificate",
+          sourceName: c.name,
+          createdAt: c.createdAt,
         });
-      });
+      }
+    });
 
-      // Certificates with proofs
-      certsRes.data.forEach((c: any) => {
-        if (c.documentKey) {
-          const fname = c.name ? `${c.name} (Certificate)` : "Certificate Proof";
+    // Achievements with proof images
+    (achsData?.data ?? []).forEach((a) => {
+      if (a.images && a.images.length > 0) {
+        a.images.forEach((img: string, idx: number) => {
+          const fname = `${a.title}${a.images.length > 1 ? ` (${idx + 1})` : ""}`;
           list.push({
-            id: `cert-${c.id}`,
+            id: `ach-${a.id}-${idx}`,
             filename: fname,
-            category: "Certificates",
-            url: getImageUrl(c.documentKey),
-            mimeType: c.documentKey.endsWith(".pdf") ? "application/pdf" : "image/jpeg",
-            source: "certificate",
-            sourceName: c.name,
-            createdAt: c.createdAt,
+            category: "Awards",
+            url: getImageUrl(img),
+            mimeType: img.endsWith(".pdf") ? "application/pdf" : "image/jpeg",
+            source: "achievement",
+            sourceName: a.title,
+            createdAt: a.createdAt,
           });
-        }
-      });
+        });
+      }
+    });
 
-      // Achievements with proof images
-      achsRes.data.forEach((a: any) => {
-        if (a.images && a.images.length > 0) {
-          a.images.forEach((img: string, idx: number) => {
-            const fname = `${a.title}${a.images.length > 1 ? ` (${idx + 1})` : ""}`;
-            list.push({
-              id: `ach-${a.id}-${idx}`,
-              filename: fname,
-              category: "Awards",
-              url: getImageUrl(img),
-              mimeType: img.endsWith(".pdf") ? "application/pdf" : "image/jpeg",
-              source: "achievement",
-              sourceName: a.title,
-              createdAt: a.createdAt,
-            });
-          });
-        }
-      });
+    // Projects with cover images / assets
+    (projsData?.data ?? []).forEach((p) => {
+      if (p.coverImage) {
+        list.push({
+          id: `proj-${p.id}`,
+          filename: `${p.title} Cover`,
+          category: "Projects",
+          url: getImageUrl(p.coverImage),
+          mimeType: p.coverImage.endsWith(".pdf") ? "application/pdf" : "image/jpeg",
+          source: "project",
+          sourceName: p.title,
+          createdAt: p.createdAt,
+        });
+      }
+    });
 
-      // Projects with cover images / assets
-      projsRes.data.forEach((p: any) => {
-        if (p.coverImage) {
-          list.push({
-            id: `proj-${p.id}`,
-            filename: `${p.title} Cover`,
-            category: "Projects",
-            url: getImageUrl(p.coverImage),
-            mimeType: p.coverImage.endsWith(".pdf") ? "application/pdf" : "image/jpeg",
-            source: "project",
-            sourceName: p.title,
-            createdAt: p.createdAt,
-          });
-        }
-      });
-
-      setItems(list);
-    } catch (e: any) {
-      toastError("Failed to load documents", e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAllDocs();
-  }, []);
+    return list;
+  }, [docsData, certsData, achsData, projsData]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,23 +159,14 @@ export default function DocumentsPage() {
     const finalName = docName.trim() || uploadedOriginalName || "Document";
     setSaving(true);
     try {
-      const res = await createDocumentApi({
+      // createDocumentApi writes the new list straight into the store.
+      await createDocumentApi({
         filename: finalName,
         originalName: finalName,
         storageKey: uploadedUrl,
         mimeType: uploadedUrl.endsWith(".pdf") ? "application/pdf" : "image/jpeg",
         category,
       });
-      const newDoc: UnifiedDocument = {
-        id: res.data.id,
-        filename: res.data.filename,
-        category: res.data.category || category,
-        url: getImageUrl(uploadedUrl),
-        mimeType: res.data.mimeType || "image/jpeg",
-        source: "document",
-        createdAt: res.data.createdAt,
-      };
-      setItems((v) => [newDoc, ...v]);
       setDocName("");
       setUploadedUrl(null);
       setUploadedOriginalName("");
@@ -208,7 +194,6 @@ export default function DocumentsPage() {
     setDeletingId(doc.id);
     try {
       await deleteDocumentApi(doc.id);
-      setItems((v) => v.filter((x) => x.id !== doc.id));
       success("Document deleted");
     } catch (e: any) {
       toastError("Delete failed", e.message);

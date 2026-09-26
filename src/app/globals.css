@@ -207,6 +207,387 @@ a[aria-disabled="true"] {
   to { --experience-chroma-angle: 360deg; }
 }
 
+/* ECA & Activities — media-forward cards */
+.eca-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 1rem;
+}
+.eca-card {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-width: 0;
+  min-height: 260px;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 55%);
+  border-radius: 1.25rem;
+  background: linear-gradient(150deg, #1f2937, #4b5563 55%, #6b7280);
+  box-shadow: 0 8px 24px rgb(17 24 39 / 8%);
+  animation: eca-card-enter 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+.eca-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 38px rgb(17 24 39 / 18%);
+}
+.eca-card__media,
+.eca-card__media img,
+.eca-card__fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.eca-card__media img {
+  object-fit: cover;
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1), opacity 300ms ease;
+}
+.eca-card:hover .eca-card__media img { transform: scale(1.06); }
+.eca-card__fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgb(255 255 255 / 32%);
+  background:
+    radial-gradient(circle at 78% 18%, rgb(107 114 128 / 90%), transparent 46%),
+    linear-gradient(150deg, #1f2937, #4b5563 60%, #6b7280);
+}
+.eca-card__shade {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgb(3 7 18 / 95%) 0%,
+    rgb(3 7 18 / 82%) 34%,
+    rgb(3 7 18 / 45%) 66%,
+    rgb(3 7 18 / 22%) 100%
+  );
+}
+/* Accent rail that grows on hover, echoing the timeline's chroma edge. */
+.eca-card__rail {
+  position: absolute;
+  z-index: 2;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(to bottom, #ff4d6d, #ffb84d 45%, #54c7ff);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.eca-card:hover .eca-card__rail { transform: scaleY(1); }
+.eca-card__content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding: 1.1rem 1.1rem 1.15rem;
+  min-width: 0;
+}
+.eca-card__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  align-self: flex-start;
+  max-width: 100%;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 12%);
+  padding: 0.2rem 0.6rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 92%);
+  backdrop-filter: blur(6px);
+}
+.eca-card__title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: #fff;
+  overflow-wrap: break-word;
+}
+.eca-card__meta {
+  font-size: 0.75rem;
+  color: rgb(255 255 255 / 72%);
+  overflow-wrap: break-word;
+}
+.eca-card__description {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: rgb(255 255 255 / 84%);
+  overflow-wrap: break-word;
+}
+.eca-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.1rem;
+}
+.eca-card__tag {
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 22%);
+  padding: 0.15rem 0.5rem;
+  font-size: 0.6875rem;
+  color: rgb(255 255 255 / 90%);
+  white-space: nowrap;
+}
+.eca-card__count {
+  position: absolute;
+  z-index: 2;
+  top: 0.7rem;
+  right: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 999px;
+  background: rgb(3 7 18 / 55%);
+  padding: 0.2rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: #fff;
+  backdrop-filter: blur(6px);
+}
+@keyframes eca-card-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 480px) {
+  .eca-card { min-height: 220px; }
+  .eca-card__content { padding: 0.9rem 0.9rem 1rem; }
+}
+
+/* Courses & Certificates */
+.cred-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 1rem;
+}
+/* Certificates read as framed documents, so the media stays object-contain
+   and the body text sits on the dark base below it — never over the artwork. */
+.cred-card {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 1.25rem;
+  background: linear-gradient(155deg, #0f2a24, #134e43 48%, #0f3b34);
+  box-shadow: 0 8px 24px rgb(6 46 38 / 14%);
+  animation: cred-card-enter 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+}
+.cred-card:hover {
+  transform: translateY(-4px);
+  border-color: rgb(52 211 153 / 45%);
+  box-shadow: 0 18px 38px rgb(6 46 38 / 30%);
+}
+.cred-card__paper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 152px;
+  margin: 0.7rem 0.7rem 0;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 0.85rem;
+  background: #fff;
+  box-shadow: 0 4px 14px rgb(3 20 16 / 30%);
+}
+.cred-card__paper img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cred-card:hover .cred-card__paper img { transform: scale(1.03); }
+.cred-card__filetag {
+  position: absolute;
+  z-index: 2;
+  top: 0.45rem;
+  right: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  border-radius: 999px;
+  background: rgb(3 20 16 / 72%);
+  padding: 0.15rem 0.45rem;
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: #fff;
+  backdrop-filter: blur(4px);
+}
+.cred-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.8rem 0.95rem 1rem;
+  min-width: 0;
+}
+.cred-card__issuer {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(110 231 183 / 92%);
+  overflow-wrap: break-word;
+}
+.cred-card__name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #fff;
+  overflow-wrap: break-word;
+}
+.cred-card__date {
+  font-size: 0.75rem;
+  color: rgb(255 255 255 / 62%);
+}
+.cred-card__id {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.1rem;
+  border: 1px solid rgb(52 211 153 / 30%);
+  border-radius: 0.4rem;
+  background: rgb(16 185 129 / 14%);
+  padding: 0.15rem 0.45rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  color: rgb(167 243 208);
+  overflow-wrap: break-word;
+}
+.cred-card__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 0.3rem;
+}
+.cred-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgb(209 250 229);
+  transition: color 150ms ease;
+}
+.cred-card__link:hover { color: #fff; text-decoration: underline; }
+.cred-card__rail {
+  position: absolute;
+  z-index: 3;
+  inset: auto 0 0 0;
+  height: 3px;
+  background: linear-gradient(to right, #10b981, #2dd4bf, #a3e635);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cred-card:hover .cred-card__rail { transform: scaleX(1); }
+
+/* Courses stay light so the section keeps a clear two-tier hierarchy:
+   certificates are the showcase, courses are the supporting list. */
+.course-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: var(--card);
+  padding: 0.95rem 1rem 0.95rem 1.15rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 4%), 0 4px 12px rgb(0 0 0 / 3%);
+  animation: cred-card-enter 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+.course-card::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(to bottom, #10b981, #2dd4bf);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  content: "";
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.course-card:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgb(17 24 39 / 10%); }
+.course-card:hover::before { transform: scaleY(1); }
+.course-card__provider {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: #6b6b76;
+  overflow-wrap: break-word;
+}
+.course-card__name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--foreground);
+  overflow-wrap: break-word;
+}
+.course-card__desc {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #4a4a52;
+  overflow-wrap: break-word;
+}
+.course-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.15rem;
+}
+.course-card__tag {
+  border: 1px solid #e8e8ea;
+  border-radius: 999px;
+  background: #f8f8f9;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.6875rem;
+  color: #3f3f46;
+  white-space: nowrap;
+}
+.course-card__linked {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  align-self: flex-start;
+  margin-top: 0.2rem;
+  border: 1px solid #a7f3d0;
+  border-radius: 999px;
+  background: #ecfdf5;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: #047857;
+}
+a.course-card__linked:hover {
+  border-color: #6ee7b7;
+  background: #d1fae5;
+  color: #065f46;
+}
+@keyframes cred-card-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 480px) {
+  .cred-card__paper { height: 128px; }
+}
+
 /* Asymmetric project bento grid */
 .project-grid {
   display: grid;
