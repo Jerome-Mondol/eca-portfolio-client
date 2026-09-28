@@ -28,7 +28,7 @@ export default function Home() {
                 <br />
                 of certificates.
               </h1>
-              <p className="mt-3 sm:mt-4 text-[15px] leading-6 text-[#5a5a66] max-w-[480px]">Showcase ECA — debate, robotics, volunteering — with projects and proof. AI organizes, you approve.</p>
+              <p className="mt-3 sm:mt-4 text-[15px] leading-6 text-[#5a5a66] max-w-[480px]">Showcase ECA — debate, robotics, volunteering with projects and proof. AI organizes, you approve.</p>
               <div className="mt-6 flex flex-col sm:flex-row gap-3">
                 <Link href="/register" className="w-full sm:w-auto">
                   <Button size="lg" className="w-full sm:w-auto min-h-[48px] text-[15px]">
@@ -41,14 +41,14 @@ export default function Home() {
                   </Button>
                 </Link>
               </div>
-              <div className="mt-6 flex items-center gap-2.5 text-[11px] sm:text-xs text-[#8a8a94] flex-wrap">
+              {/* <div className="mt-6 flex items-center gap-2.5 text-[11px] sm:text-xs text-[#8a8a94] flex-wrap">
                 <span className="flex -space-x-1.5 shrink-0">
                   <img src="https://i.pravatar.cc/100?img=11" className="h-6 w-6 rounded-full border-2 border-white" alt="" />
                   <img src="https://i.pravatar.cc/100?img=22" className="h-6 w-6 rounded-full border-2 border-white" alt="" />
                   <img src="https://i.pravatar.cc/100?img=33" className="h-6 w-6 rounded-full border-2 border-white" alt="" />
                 </span>
                 <span className="leading-tight">Used by 2,400+ students • Free for education • No credit card</span>
-              </div>
+              </div> */}
             </div>
 
             {/* Hero visual — portfolio mock — no overflow at 320 */}
@@ -57,8 +57,8 @@ export default function Home() {
                 <div className="h-9 border-b border-[#f0f0f2] flex items-center gap-1.5 px-3 sm:px-4 min-w-0">
                   <span className="h-3 w-3 rounded-full bg-[#ff5f56] shrink-0" /><span className="h-3 w-3 rounded-full bg-[#ffbd2e] shrink-0" /><span className="h-3 w-3 rounded-full bg-[#27c93f] shrink-0" />
                   <span className="ml-2 sm:ml-3 text-[11px] sm:text-xs text-[#8a8a94] font-mono truncate">folio.com/u/john-doe</span>
-                  <span className="ml-auto text-[11px] sm:text-xs bg-[#f3f3f5] border border-[#e8e8ea] rounded-full px-2 py-1 shrink-0 hidden xs:inline-flex sm:inline-flex">Public • 1,248 views</span>
-                  <span className="ml-auto text-[11px] bg-[#f3f3f5] border border-[#e8e8ea] rounded-full px-2 py-1 shrink-0 sm:hidden">1,248 views</span>
+                  {/* <span className="ml-auto text-[11px] sm:text-xs bg-[#f3f3f5] border border-[#e8e8ea] rounded-full px-2 py-1 shrink-0 hidden xs:inline-flex sm:inline-flex">Public • 1,248 views</span>
+                  <span className="ml-auto text-[11px] bg-[#f3f3f5] border border-[#e8e8ea] rounded-full px-2 py-1 shrink-0 sm:hidden">1,248 views</span> */}
                 </div>
                 <div className="p-4 sm:p-6">
                   <div className="flex gap-4">
@@ -87,15 +87,6 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
-              </div>
-              {/* floating badges */}
-              <div className="hidden sm:flex absolute -right-3 top-10 bg-white border border-[#e8e8ea] rounded-2xl shadow-lg px-3 py-2 items-center gap-2">
-                <span className="h-8 w-8 rounded-xl bg-[#111827] text-white flex items-center justify-center"><Wand2 size={14} /></span>
-                <div><p className="text-xs font-semibold">AI analyzed your certificate</p><p className="text-xs text-[#6b6b76]">2 skills detected → Ready to add</p></div>
-              </div>
-              <div className="hidden sm:flex absolute -left-4 bottom-8 bg-white border border-[#e8e8ea] rounded-2xl shadow-lg px-3 py-2 items-center gap-2">
-                <span className="h-8 w-8 rounded-xl bg-[#f3f3f5] border border-[#e8e8ea] flex items-center justify-center">✓</span>
-                <div><p className="text-xs font-semibold">Portfolio 72% complete</p><p className="text-xs text-[#6b6b76]">4 steps remaining</p></div>
               </div>
             </div>
           </div>
