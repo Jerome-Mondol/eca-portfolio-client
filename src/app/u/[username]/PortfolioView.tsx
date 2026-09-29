@@ -9,6 +9,7 @@ import { formatMonthYear } from "@/lib/date";
 import type { PublicPortfolio } from "@/lib/publicPortfolio";
 import { EcaCard } from "./EcaCard";
 import { CertCard, CourseCard } from "./LearningCards";
+import { PortfolioStatsCard } from "./PortfolioStatsCard";
 import {
   Code2,
   Link2,
@@ -109,6 +110,7 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
 
   const interests: string[] = profile?.interests ?? [];
   const education: any = profile?.education ?? {};
+  const educationSummary = typeof education === "string" ? education : [education.degree, education.institution].filter(Boolean).join(" / ");
   const avatarSrc = profile?.avatarKey ? getImageUrl(profile.avatarKey) : null;
 
   const github = socials.find((s) => s.platform.toLowerCase().includes("github"));
@@ -134,9 +136,9 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
       {/* HERO */}
       <Reveal y={24}>
       <section className="mx-auto max-w-[1080px] px-3 sm:px-6 py-6 sm:py-12">
-        <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-6 sm:gap-8 items-start">
-          <div className="text-center lg:text-left min-w-0">
-            <div className="flex justify-center lg:justify-start">
+        <div className="grid md:grid-cols-[1.1fr_0.9fr] gap-6 sm:gap-8 items-start">
+          <div className="text-center md:text-left min-w-0">
+            <div className="flex justify-center md:justify-start">
               <Avatar
                 name={user.fullName || user.username}
                 src={avatarSrc}
@@ -147,16 +149,16 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
             <h1 className="mt-4 text-[26px] sm:text-[32px] font-semibold tracking-tight break-words">{user.fullName}</h1>
             <p className="text-sm text-foreground font-medium break-words">{profile?.headline ?? "Student"}</p>
             {profile?.location && (
-              <p className="text-xs text-muted mt-1 flex items-center justify-center lg:justify-start gap-1">
+              <p className="text-xs text-muted mt-1 flex items-center justify-center md:justify-start gap-1">
                 <MapPin size={12} /> {profile.location}
               </p>
             )}
             {profile?.bio ? (
-              <p className="mt-4 text-sm leading-6 text-muted-strong max-w-[560px] mx-auto lg:mx-0 break-words">{profile.bio}</p>
+              <p className="mt-4 text-sm leading-6 text-muted-strong max-w-[560px] mx-auto md:mx-0 break-words">{profile.bio}</p>
             ) : (
-              <p className="mt-4 text-sm leading-6 text-muted-foreground max-w-[560px] mx-auto lg:mx-0">No bio yet.</p>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground max-w-[560px] mx-auto md:mx-0">No bio yet.</p>
             )}
-            <div className="mt-5 flex flex-col sm:flex-row flex-wrap justify-center lg:justify-start gap-2">
+            <div className="mt-5 flex flex-col sm:flex-row flex-wrap justify-center md:justify-start gap-2">
               {hasProjects && (
                 <a href="#projects">
                   <Button size="md" className="w-full sm:w-auto min-h-[44px]">
@@ -171,7 +173,7 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
               </a>
             </div>
             {socials.length > 0 && (
-              <div className="mt-4 flex flex-wrap justify-center lg:justify-start gap-1.5">
+              <div className="mt-4 flex flex-wrap justify-center md:justify-start gap-1.5">
                 {socials.map((s, i) => (
                   <a
                     key={i}
@@ -186,10 +188,72 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
               </div>
             )}
           </div>
+          <aside aria-label="Portfolio at a glance" className="relative hidden min-h-[390px] flex-col justify-between overflow-hidden rounded-[28px] border border-white/60 bg-[#172321] p-6 text-white shadow-[0_20px_55px_rgba(23,35,33,0.18)] md:flex xl:p-7">
+            <div aria-hidden="true" className="pointer-events-none absolute -right-14 -top-16 h-56 w-56 rounded-full border border-white/10" />
+            <div aria-hidden="true" className="pointer-events-none absolute -right-2 -top-4 h-32 w-32 rounded-full border border-white/10" />
+            <div className="relative">
+              <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-200/80">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> Portfolio snapshot
+              </div>
+              <h2 className="mt-4 text-2xl font-semibold tracking-tight">At a glance</h2>
+              <p className="mt-1 max-w-[300px] text-sm leading-6 text-white/65">A quick look at what I study and the work I share.</p>
+
+              <div className="mt-6 space-y-4">
+                {educationSummary && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.16em] text-white/45">Education</p>
+                    <p className="mt-1 text-sm font-medium leading-5 text-white/90">{educationSummary}</p>
+                  </div>
+                )}
+                {skills.length > 0 && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.16em] text-white/45">Focus areas</p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {skills.slice(0, 4).map((skill: any) => (
+                        <span key={skill.id} className="rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-1 text-[11px] text-white/85">{skill.name}</span>
+                      ))}
+                      {skills.length > 4 && <span className="px-1 py-1 text-[11px] text-white/50">+{skills.length - 4}</span>}
+                    </div>
+                  </div>
+                )}
+                {profile?.location && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.16em] text-white/45">Based in</p>
+                    <p className="mt-1 text-sm font-medium text-white/90">{profile.location}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="relative mt-8 grid grid-cols-3 border-t border-white/15 pt-4">
+              <div>
+                <p className="text-2xl font-semibold tabular-nums">{String(projects.length).padStart(2, "0")}</p>
+                <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/50">Projects</p>
+              </div>
+              <div className="border-l border-white/15 pl-4">
+                <p className="text-2xl font-semibold tabular-nums">{String(achievements.length).padStart(2, "0")}</p>
+                <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/50">Honors</p>
+              </div>
+              <div className="border-l border-white/15 pl-4">
+                <p className="text-2xl font-semibold tabular-nums">{String(certificates.length).padStart(2, "0")}</p>
+                <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/50">Certificates</p>
+              </div>
+            </div>
+          </aside>
         </div>
       </section>
       </Reveal>
 
+      {/* <PortfolioStatsCard
+        fullName={user.fullName || user.username}
+        username={user.username}
+        headline={profile?.headline ?? "Student"}
+        location={profile?.location}
+        projectCount={projects.length}
+        achievementCount={achievements.length}
+        certificateCount={certificates.length}
+        skillCount={skills.length}
+      /> */}
       {/* Experience */}
       {hasExperiences && (
         <section id="experience" className="mx-auto max-w-[1080px] px-3 sm:px-6 py-4 sm:py-6">
