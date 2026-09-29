@@ -57,7 +57,7 @@ export default function Home() {
               <div className="rounded-[20px] sm:rounded-[24px] border border-border bg-card shadow-[0_8px_32px_rgba(90,60,30,0.10),0_1px_3px_rgba(90,60,30,0.06)] overflow-hidden">
                 <div className="h-9 border-b border-border-soft flex items-center gap-1.5 px-3 sm:px-4 min-w-0">
                   <span className="h-3 w-3 rounded-full bg-[#ff5f56] shrink-0" /><span className="h-3 w-3 rounded-full bg-[#ffbd2e] shrink-0" /><span className="h-3 w-3 rounded-full bg-[#27c93f] shrink-0" />
-                  <span className="ml-2 sm:ml-3 text-[11px] sm:text-xs text-muted-foreground font-mono truncate">folio.com/u/john-doe</span>
+                  <span className="ml-2 sm:ml-3 text-[11px] sm:text-xs text-muted-foreground font-mono truncate">proofolio.com/u/john-doe</span>
                   {/* <span className="ml-auto text-[11px] sm:text-xs bg-surface-2 border border-border rounded-full px-2 py-1 shrink-0 hidden xs:inline-flex sm:inline-flex">Public • 1,248 views</span>
                   <span className="ml-auto text-[11px] bg-surface-2 border border-border rounded-full px-2 py-1 shrink-0 sm:hidden">1,248 views</span> */}
                 </div>
@@ -319,8 +319,8 @@ export default function Home() {
         <div className="mx-auto max-w-[1120px] px-3 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="h-7 w-7 rounded-lg bg-primary-strong flex items-center justify-center text-white text-xs font-bold">◈</div>
-            <span className="font-semibold text-sm">folio</span>
-            <span className="text-xs text-muted-foreground">© 2026 Folio — Educational ECA Showcase</span>
+            <span className="font-semibold text-sm">proofolio</span>
+            <span className="text-xs text-muted-foreground">© 2026 Proofolio — Educational ECA Showcase</span>
           </div>
           <div className="flex gap-4 text-xs text-muted">
             <a href="#" className="hover:text-foreground">For Students</a>

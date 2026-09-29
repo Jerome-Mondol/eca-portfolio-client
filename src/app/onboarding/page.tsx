@@ -23,7 +23,7 @@ export default function OnboardingPage() {
       <header className="h-[56px] border-b border-border bg-card flex items-center px-4 sm:px-6">
         <div className="flex items-center gap-2">
           <div className="h-7 w-7 rounded-lg bg-primary-strong flex items-center justify-center text-white text-xs font-bold">◈</div>
-          <span className="font-semibold text-sm">folio</span>
+          <span className="font-semibold text-sm">proofolio</span>
           <span className="text-xs text-muted-foreground ml-2">Step {step} of {steps}</span>
         </div>
         <div className="ml-auto flex items-center gap-2">

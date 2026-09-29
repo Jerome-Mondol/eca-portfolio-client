@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
+import { Reveal } from "@/components/ui/reveal";
 import { getImageUrl } from "@/lib/upload";
 import { formatMonthYear } from "@/lib/date";
 import type { PublicPortfolio } from "@/lib/publicPortfolio";
@@ -21,6 +22,7 @@ import {
   Palette,
   FileText,
   ArrowUpRight,
+  Award,
   ExternalLink,
 } from "lucide-react";
 
@@ -47,6 +49,20 @@ function socialHref(url: string) {
   return url.startsWith("http") ? url : `https://${url}`;
 }
 
+function parseAchievementDate(value?: string | null): Date | null {
+  if (!value?.trim()) return null;
+  const raw = value.trim();
+  const datePrefix = /^(\d{4})-(\d{1,2})-(\d{1,2})(?:$|T| )/.exec(raw);
+  if (datePrefix) {
+    const [, year, month, day] = datePrefix;
+    const parsed = new Date(Number(year), Number(month) - 1, Number(day), 12);
+    if (parsed.getFullYear() !== Number(year) || parsed.getMonth() !== Number(month) - 1 || parsed.getDate() !== Number(day)) return null;
+    return parsed;
+  }
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 export function PortfolioView({ data }: { data: PublicPortfolio }) {
   const { user, profile, projects, activities, certificates, courses, experiences, achievements, skills } = data;
   const hasProjects = projects.length > 0;
@@ -61,6 +77,20 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
   }
   const hasExperiences = experiences.length > 0;
   const hasAchievements = achievements.length > 0;
+  const achievementGroups = (() => {
+    const groups = new Map<string, any[]>();
+    for (const achievement of achievements) {
+      const parsedDate = parseAchievementDate(achievement.date);
+      const year = parsedDate && !Number.isNaN(parsedDate.getTime()) ? String(parsedDate.getFullYear()) : "Undated";
+      groups.set(year, [...(groups.get(year) ?? []), achievement]);
+    }
+    return [...groups.entries()]
+      .sort(([a], [b]) => a === "Undated" ? 1 : b === "Undated" ? -1 : Number(b) - Number(a))
+      .map(([year, items]) => ({
+        year,
+        items: items.sort((a, b) => (b.date ?? "").localeCompare(a.date ?? "")),
+      }));
+  })();
   const hasSkills = skills.length > 0;
 
   const socials: Array<{ platform: string; url: string }> = (() => {
@@ -90,10 +120,10 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
         <div className="mx-auto max-w-[1080px] px-3 sm:px-6 h-[56px] flex items-center justify-between gap-2">
           <Link href="/" className="flex items-center gap-2 min-h-[44px]">
             <div className="h-7 w-7 rounded-lg bg-primary-strong flex items-center justify-center text-white text-xs font-bold shrink-0">◈</div>
-            <span className="font-semibold text-sm">folio</span>
+            <span className="font-semibold text-sm">proofolio</span>
           </Link>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="hidden sm:inline text-xs text-muted truncate">folio.com/u/{user.username}</span>
+            <span className="hidden sm:inline text-xs text-muted truncate">proofolio.com/u/{user.username}</span>
             <a href="#contact">
               <Button size="sm" className="min-h-[40px]">Contact</Button>
             </a>
@@ -102,6 +132,7 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
       </header>
 
       {/* HERO */}
+      <Reveal y={24}>
       <section className="mx-auto max-w-[1080px] px-3 sm:px-6 py-6 sm:py-12">
         <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-6 sm:gap-8 items-start">
           <div className="text-center lg:text-left min-w-0">
@@ -109,8 +140,8 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
               <Avatar
                 name={user.fullName || user.username}
                 src={avatarSrc}
-                className="h-32 w-32 sm:h-36 sm:w-36 rounded-[28px] border border-border shadow-md bg-white"
-                ratio={0.42}
+                className="h-36 w-36 sm:h-40 sm:w-40 rounded-full border border-border shadow-md bg-white"
+                ratio={0.4}
               />
             </div>
             <h1 className="mt-4 text-[26px] sm:text-[32px] font-semibold tracking-tight break-words">{user.fullName}</h1>
@@ -157,11 +188,15 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
           </div>
         </div>
       </section>
+      </Reveal>
 
       {/* Experience */}
       {hasExperiences && (
         <section id="experience" className="mx-auto max-w-[1080px] px-3 sm:px-6 py-4 sm:py-6">
-          <h2 className="text-lg font-semibold tracking-tight">Experience</h2>
+          <Reveal>
+            <h2 className="text-lg font-semibold tracking-tight">Experience</h2>
+          </Reveal>
+          <Reveal delay={90} y={20}>
           <div className="experience-timeline mt-8">
             <div className="experience-timeline__spine" aria-hidden="true" />
             {experiences.map((ex: any, index: number) => (
@@ -190,18 +225,22 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
               </article>
             ))}
           </div>
+          </Reveal>
         </section>
       )}
 
       {/* Projects */}
       {hasProjects && (
         <section id="projects" className="mx-auto max-w-[1080px] px-3 sm:px-6 py-4 sm:py-6">
+          <Reveal>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold tracking-tight">Projects</h2>
             <span className="text-xs text-muted-foreground">
               {projects.length} project{projects.length > 1 ? "s" : ""}
             </span>
           </div>
+          </Reveal>
+          <Reveal delay={90} y={20}>
           <div className={"project-grid project-grid--count-" + Math.min(projects.length, 5) + " mt-5"}>
             {projects.slice(0, 5).map((p: any, index: number) => {
               const projectLinks = p.links?.length
@@ -274,29 +313,35 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
               );
             })}
           </div>
+          </Reveal>
         </section>
       )}
 
       {/* ECA & Activities */}
       {hasActivities && (
         <section className="mx-auto max-w-[1080px] px-3 sm:px-6 py-4 sm:py-6">
+          <Reveal>
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold tracking-tight">ECA &amp; Activities</h2>
             <span className="text-xs text-muted-foreground">
               {activities.length} {activities.length === 1 ? "activity" : "activities"}
             </span>
           </div>
+          </Reveal>
+          <Reveal delay={90} y={20}>
           <div className="eca-grid mt-5">
             {activities.map((a: any, index: number) => (
               <EcaCard key={a.id} activity={a} style={{ animationDelay: `${index * 70}ms` }} />
             ))}
           </div>
+          </Reveal>
         </section>
       )}
 
       {/* Courses & Certificates */}
       {(hasCertificates || hasCourses) && (
         <section className="mx-auto max-w-[1080px] px-3 sm:px-6 py-4 sm:py-6">
+          <Reveal>
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold tracking-tight">Courses &amp; Certificates</h2>
             <span className="text-xs text-muted-foreground">
@@ -304,6 +349,8 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
               {certificates.length + courses.length === 1 ? "item" : "items"}
             </span>
           </div>
+          </Reveal>
+          <Reveal delay={90} y={20}>
           <div className="cred-grid mt-5">
             {certificates.map((c: any, index: number) => (
               <CertCard key={c.id} certificate={c} style={{ animationDelay: `${index * 70}ms` }} />
@@ -317,35 +364,89 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
               />
             ))}
           </div>
+          </Reveal>
         </section>
       )}
 
       {/* Achievements */}
       {hasAchievements && (
-        <section className="mx-auto max-w-[1080px] px-3 sm:px-6 py-4 sm:py-6">
-          <h2 className="text-lg font-semibold tracking-tight">Achievements</h2>
-          <Card className="mt-4 p-4">
-            <div className="space-y-2">
-              {achievements.map((a: any) => (
-                <div key={a.id} className="flex gap-3 py-2 border-b last:border-0 border-border-soft min-w-0">
-                  <span className="text-lg shrink-0" aria-hidden="true">&#127942;</span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium break-words">{a.title}</p>
-                    <p className="text-xs text-muted break-words">
-                      {[a.category, a.organization, a.date].filter(Boolean).join(" • ")} • {a.description ?? ""}
-                    </p>
+        <section className="mx-auto max-w-[1080px] px-3 sm:px-6 py-6 sm:py-8">
+          <Reveal>
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Recognition</p>
+                <h2 className="mt-1 text-xl sm:text-2xl font-semibold tracking-tight">Achievements</h2>
+              </div>
+              <span className="text-xs text-muted">{achievements.length} {achievements.length === 1 ? "honor" : "honors"}</span>
+            </div>
+          </Reveal>
+          <Reveal delay={90} y={20}>
+            <div className="mt-6 space-y-7 sm:space-y-8">
+              {achievementGroups.map((group) => (
+                <div key={group.year} className="grid gap-3 sm:grid-cols-[100px_minmax(0,1fr)] sm:gap-6">
+                  <div className="sm:pt-1">
+                    <span className="text-[10px] uppercase tracking-[0.16em] text-muted">{group.year === "Undated" ? "Date" : "Year"}</span>
+                    <p className="mt-0.5 text-xl font-semibold tracking-tight text-foreground">{group.year}</p>
+                  </div>
+                  <div className="relative space-y-0 border-l border-border-soft pl-5 sm:pl-6">
+                    {group.items.map((a: any, index: number) => {
+                      const parsedDate = parseAchievementDate(a.date);
+                      const dateLabel = parsedDate && !Number.isNaN(parsedDate.getTime())
+                        ? parsedDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+                        : null;
+                      const image = a.images?.[0];
+                      return (
+                        <article key={a.id} className={`relative pb-6 ${index === group.items.length - 1 ? "pb-0" : ""}`}>
+                          <span className="absolute -left-[29px] top-0.5 flex h-7 w-7 items-center justify-center rounded-full border border-border-soft bg-card text-primary-strong shadow-sm sm:-left-[33px]" aria-hidden="true">
+                            <Award size={14} />
+                          </span>
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                <h3 className="text-sm sm:text-base font-semibold leading-snug">{a.title}</h3>
+                                {a.category && <Badge className="text-[10px] px-2 py-0.5">{a.category}</Badge>}
+                              </div>
+                              {(a.organization || dateLabel) && (
+                                <p className="mt-1 text-xs text-muted break-words">
+                                  {[a.organization, dateLabel].filter(Boolean).join(" / ")}
+                                </p>
+                              )}
+                              {a.description && <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-strong">{a.description}</p>}
+                            </div>
+                            <div className="relative flex h-20 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-amber-200/70 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-100 text-amber-800 sm:h-20 sm:w-24">
+                              <div className="flex flex-col items-center gap-1">
+                                <Award size={21} strokeWidth={1.7} />
+                                <span className="text-[8px] font-semibold uppercase tracking-[0.16em]">Recognition</span>
+                              </div>
+                              {image && (
+                                <img
+                                  src={getImageUrl(image)}
+                                  alt={`${a.title} evidence`}
+                                  className="absolute inset-0 h-full w-full object-cover"
+                                  onError={(event) => { event.currentTarget.style.display = "none"; }}
+                                />
+                              )}
+                            </div>
+                          </div>
+                          {index < group.items.length - 1 && <div className="mt-5 border-b border-border-soft" />}
+                        </article>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
             </div>
-          </Card>
+          </Reveal>
         </section>
       )}
 
       {/* Skills */}
       {hasSkills && (
         <section className="mx-auto max-w-[1080px] px-3 sm:px-6 py-4 sm:py-6">
-          <h2 className="text-lg font-semibold tracking-tight">Skills</h2>
+          <Reveal>
+            <h2 className="text-lg font-semibold tracking-tight">Skills</h2>
+          </Reveal>
+          <Reveal delay={90} y={20}>
           <div className="mt-4 flex flex-wrap gap-1.5">
             {skills.map((s: any) => (
               <Badge key={s.id} className="text-sm px-3 py-1.5">
@@ -353,11 +454,13 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
               </Badge>
             ))}
           </div>
+          </Reveal>
         </section>
       )}
 
       {/* Contact */}
       <section id="contact" className="mx-auto max-w-[1080px] px-3 sm:px-6 py-6 sm:py-8">
+        <Reveal y={20}>
         <Card className="p-6 sm:p-8 text-center">
           <h2 className="text-lg font-semibold">Contact</h2>
           <p className="text-sm text-muted mt-1">Available for internships and collaboration.</p>
@@ -383,8 +486,9 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
             </a>
           </div>
         </Card>
+        </Reveal>
         <p className="text-center text-xs text-muted-foreground mt-6 px-2">
-          Built with folio —{" "}
+          Built with proofolio —{" "}
           <Link href="/register" className="underline">
             Create yours
           </Link>

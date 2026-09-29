@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Folio — ECA Showcase for Students | Educational Portfolio",
+  title: "Proofolio — ECA Showcase for Students | Educational Portfolio",
   description: "An educational project helping students present their extracurricular activities properly. Transform certificates, projects, and ECA into a clean academic portfolio — with AI organizing, you approving. Built for university applications and student development.",
 };
 

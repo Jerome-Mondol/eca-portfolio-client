@@ -59,7 +59,7 @@ export function ProfileView() {
 
   const username = user?.username ?? data?.user?.username ?? "";
   const portfolioUrl = origin ? `${origin}/u/${username}` : `/u/${username}`;
-  const portfolioPath = `folio.com/u/${username}`;
+  const portfolioPath = `proofolio.com/u/${username}`;
 
   const copyLink = async () => {
     try {

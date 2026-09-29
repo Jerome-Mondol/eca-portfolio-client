@@ -17,7 +17,7 @@ const AuthContext = createContext<AuthState | null>(null);
 function readCachedUser(): User | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem("folio_user");
+    const raw = localStorage.getItem("proofolio_user");
     return raw ? (JSON.parse(raw) as User) : null;
   } catch {
     return null;
@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       return;
     }
-    const token = typeof window !== "undefined" ? localStorage.getItem("folio_access") : null;
+    const token = typeof window !== "undefined" ? localStorage.getItem("proofolio_access") : null;
     if (!token) {
       setUser(null);
       return;
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await meApi();
       setUser(data.user);
-      localStorage.setItem("folio_user", JSON.stringify(data.user));
+      localStorage.setItem("proofolio_user", JSON.stringify(data.user));
     } catch {
       // apiFetch already handles 401 -> handleGlobalLogout internally
       // Just clear user state here, don't call handleGlobalLogout again

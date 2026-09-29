@@ -6,7 +6,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <header className="h-[56px] border-b border-border bg-card flex items-center px-3 sm:px-6">
         <Link href="/" className="flex items-center gap-2">
           <div className="h-7 w-7 rounded-lg bg-primary-strong flex items-center justify-center text-white text-xs font-bold">◈</div>
-          <span className="font-semibold text-sm">folio</span>
+          <span className="font-semibold text-sm">proofolio</span>
         </Link>
         <Link href="/" className="ml-auto text-sm text-muted hover:text-foreground">← Back to home</Link>
       </header>
@@ -17,7 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="relative">
             <p className="text-sm font-medium text-white/60">What students say</p>
             <blockquote className="mt-6 text-xl leading-8 font-medium">
-              &ldquo;Folio turned my scattered certificates and projects into a portfolio I could actually send to recruiters. The AI saved me hours.&rdquo;
+              &ldquo;Proofolio turned my scattered certificates and projects into a portfolio I could actually send to recruiters. The AI saved me hours.&rdquo;
             </blockquote>
             <div className="mt-6 flex items-center gap-3">
               <img src="https://i.pravatar.cc/100?img=32" alt="" className="h-9 w-9 rounded-full" />

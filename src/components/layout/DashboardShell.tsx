@@ -23,7 +23,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   // Also redirects to login when there is genuinely no session.
   useEffect(() => {
     if (loading) return;
-    const token = window.localStorage.getItem("folio_access");
+    const token = window.localStorage.getItem("proofolio_access");
     if (!user && !token) {
       // Use window.location.replace for a clean redirect (avoids Next.js router race)
       window.location.replace("/login");
@@ -71,7 +71,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </button>
             <Link href="/dashboard" className="lg:hidden flex items-center gap-2 min-h-[44px] px-1">
               <div className="h-7 w-7 rounded-lg bg-primary-strong flex items-center justify-center text-white text-xs font-bold shrink-0">◈</div>
-              <span className="font-semibold text-[15px] tracking-tight">folio</span>
+              <span className="font-semibold text-[15px] tracking-tight">proofolio</span>
             </Link>
 
             <div className="hidden sm:flex items-center gap-2 flex-1 max-w-[420px] ml-1">

@@ -19,7 +19,7 @@ export function PortfolioPreview({ username, fullName, theme, accent, sections }
         <span className="h-3 w-3 rounded-full bg-[#ffbd2e] shrink-0" />
         <span className="h-3 w-3 rounded-full bg-[#27c93f] shrink-0" />
         <span className="ml-2 text-xs text-muted-foreground truncate">
-          folio.com/u/{username || "username"} • {theme}
+          proofolio.com/u/{username || "username"} • {theme}
         </span>
         <span className="ml-auto h-2 w-2 rounded-full shrink-0" style={{ background: accent }} />
       </div>

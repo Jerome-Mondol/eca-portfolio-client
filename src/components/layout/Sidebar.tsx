@@ -47,7 +47,7 @@ export function Sidebar() {
     <aside className="hidden lg:flex w-[260px] shrink-0 flex-col border-r border-border bg-card sticky top-0 h-screen overflow-y-auto">
       <div className="h-[56px] flex items-center gap-2 px-5 border-b border-border shrink-0">
         <div className="h-7 w-7 rounded-lg bg-primary-strong flex items-center justify-center text-[13px] font-bold">◈</div>
-        <span className="text-[15px] font-semibold tracking-tight">folio</span>
+        <span className="text-[15px] font-semibold tracking-tight">proofolio</span>
         <span className="ml-auto text-xs text-muted-foreground">v1.0</span>
       </div>
       <nav className="p-3 space-y-0.5 flex-1">

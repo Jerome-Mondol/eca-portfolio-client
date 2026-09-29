@@ -22,7 +22,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      const token = typeof window !== "undefined" ? localStorage.getItem("folio_access") : null;
+      const token = typeof window !== "undefined" ? localStorage.getItem("proofolio_access") : null;
       if (token) router.replace("/dashboard");
     }
   }, [authLoading, user, router]);
@@ -67,7 +67,7 @@ export default function RegisterPage() {
         <div>
           <Label htmlFor="username">Username</Label>
           <div className="flex items-center gap-2 mt-1.5">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">folio.com/u/</span>
+            <span className="text-sm text-muted-foreground whitespace-nowrap">proofolio.com/u/</span>
             <Input id="username" placeholder="john-doe" required value={username} onChange={(e) => setUsername(e.target.value)} />
           </div>
           <p className="text-xs text-muted-foreground mt-1">Lowercase letters, numbers, hyphen. Public portfolio URL.</p>

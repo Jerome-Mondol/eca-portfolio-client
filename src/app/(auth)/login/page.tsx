@@ -19,7 +19,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      const token = typeof window !== "undefined" ? localStorage.getItem("folio_access") : null;
+      const token = typeof window !== "undefined" ? localStorage.getItem("proofolio_access") : null;
       if (token) router.replace("/dashboard");
     }
   }, [authLoading, user, router]);

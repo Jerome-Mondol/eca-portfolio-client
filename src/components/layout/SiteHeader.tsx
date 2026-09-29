@@ -11,7 +11,7 @@ export function SiteHeader() {
       <div className="mx-auto flex h-[56px] max-w-[1120px] items-center justify-between px-3 sm:px-6 gap-2">
         <Link href="/" className="flex items-center gap-2 min-h-[44px] shrink-0">
           <div className="h-10 w-10 rounded-full bg-primary-strong flex items-center justify-center text-white text-[30px] font-bold tracking-tighter shrink-0">◈</div>
-          <span className="text-2xl font-semibold tracking-tight">folio</span>
+          <span className="text-2xl font-semibold tracking-tight">proofolio</span>
           
         </Link>
 

@@ -2,7 +2,7 @@ import { API_URL } from "./api";
 
 function getAccessToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("folio_access");
+  return localStorage.getItem("proofolio_access");
 }
 
 /**

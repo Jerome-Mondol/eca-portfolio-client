@@ -10,12 +10,12 @@ type ApiOptions = RequestInit & { auth?: boolean; noStore?: boolean };
 
 function getAccessToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("folio_access");
+  return localStorage.getItem("proofolio_access");
 }
 
 function getRefreshToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("folio_refresh");
+  return localStorage.getItem("proofolio_refresh");
 }
 
 let _isLoggingOut = false;
@@ -29,9 +29,9 @@ export function handleGlobalLogout() {
   if (_isLoggingOut) return;
   _isLoggingOut = true;
 
-  localStorage.removeItem("folio_access");
-  localStorage.removeItem("folio_refresh");
-  localStorage.removeItem("folio_user");
+  localStorage.removeItem("proofolio_access");
+  localStorage.removeItem("proofolio_refresh");
+  localStorage.removeItem("proofolio_user");
   clearResourceStore();
   // Cancel any pending refresh
   refreshPromise = null;
@@ -163,17 +163,17 @@ export type User = { id: string; email: string; username: string; fullName: stri
 
 export async function registerApi(payload: { fullName: string; email: string; username: string; password: string; confirmPassword: string }) {
   const data = await apiFetch("/api/auth/register", { method: "POST", body: JSON.stringify(payload) });
-  if (data.accessToken) localStorage.setItem("folio_access", data.accessToken);
-  if (data.refreshToken) localStorage.setItem("folio_refresh", data.refreshToken);
-  if (data.user) localStorage.setItem("folio_user", JSON.stringify(data.user));
+  if (data.accessToken) localStorage.setItem("proofolio_access", data.accessToken);
+  if (data.refreshToken) localStorage.setItem("proofolio_refresh", data.refreshToken);
+  if (data.user) localStorage.setItem("proofolio_user", JSON.stringify(data.user));
   return data as { user: User; accessToken: string; refreshToken: string };
 }
 
 export async function loginApi(payload: { email: string; password: string }) {
   const data = await apiFetch("/api/auth/login", { method: "POST", body: JSON.stringify(payload) });
-  if (data.accessToken) localStorage.setItem("folio_access", data.accessToken);
-  if (data.refreshToken) localStorage.setItem("folio_refresh", data.refreshToken);
-  if (data.user) localStorage.setItem("folio_user", JSON.stringify(data.user));
+  if (data.accessToken) localStorage.setItem("proofolio_access", data.accessToken);
+  if (data.refreshToken) localStorage.setItem("proofolio_refresh", data.refreshToken);
+  if (data.user) localStorage.setItem("proofolio_user", JSON.stringify(data.user));
   return data as { user: User; accessToken: string; refreshToken: string };
 }
 
@@ -192,8 +192,8 @@ export async function refreshApi() {
     throw new Error("Refresh failed");
   }
   const data = await res.json();
-  if (data.accessToken) localStorage.setItem("folio_access", data.accessToken);
-  if (data.refreshToken) localStorage.setItem("folio_refresh", data.refreshToken);
+  if (data.accessToken) localStorage.setItem("proofolio_access", data.accessToken);
+  if (data.refreshToken) localStorage.setItem("proofolio_refresh", data.refreshToken);
   return data as { accessToken: string; refreshToken: string };
 }
 

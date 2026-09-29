@@ -23,7 +23,9 @@ type RevealProps = {
  * Reduced-motion users and browsers without IntersectionObserver get the
  * content immediately — the hidden start state only exists when the animation
  * will actually run. `data-reveal` is the hook the no-JS fallback in
- * app/layout.tsx uses to force everything visible.
+ * app/layout.tsx uses to force everything visible, and `data-reveal-shown`
+ * is what the stylesheet keys its own keyframe entrances off, so grids nested
+ * inside a Reveal animate when the wrapper is reached rather than on mount.
  */
 export function Reveal({ children, delay = 0, y = 28, className = "", id }: RevealProps) {
   const ref = useRef<HTMLElement | null>(null);
@@ -65,6 +67,7 @@ export function Reveal({ children, delay = 0, y = 28, className = "", id }: Reve
       ref={ref as React.Ref<HTMLDivElement>}
       id={id}
       data-reveal=""
+      data-reveal-shown={shown ? "" : undefined}
       className={className}
       style={
         {
