@@ -44,25 +44,25 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#fcfcfd] flex items-center justify-center">
+      <div className="min-h-screen page-warm flex items-center justify-center">
         <div className="text-center space-y-3">
-          <div className="h-8 w-8 rounded-full border-2 border-[#111827] border-t-transparent animate-spin mx-auto" />
-          <p className="text-sm text-[#6b6b76]">Loading...</p>
+          <div className="h-8 w-8 rounded-full border-2 border-primary-strong border-t-transparent animate-spin mx-auto" />
+          <p className="text-sm text-muted">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] flex">
+    <div className="min-h-screen page-warm flex">
       <Sidebar />
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Top header mobile/desktop — 56px compact per spec */}
-        <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-xl border-b border-[#ececef] supports-[backdrop-filter]:bg-white/75">
+        <header className="sticky top-0 z-30 bg-card/85 backdrop-blur-xl border-b border-border supports-[backdrop-filter]:bg-card/75">
           <div className="flex items-center gap-2 px-3 sm:px-6 h-[56px] max-w-[1100px] w-full mx-auto">
             {/* mobile hamburger — 44px tap target */}
             <button
-              className="lg:hidden h-11 w-11 shrink-0 rounded-full border border-[#e8e8ea] bg-white flex items-center justify-center active:bg-[#f3f3f5] transition"
+              className="lg:hidden h-11 w-11 shrink-0 rounded-full border border-border bg-card flex items-center justify-center active:bg-surface-2 transition"
               onClick={() => setMobileMenu(!mobileMenu)}
               aria-label="Toggle menu"
               aria-expanded={mobileMenu}
@@ -70,16 +70,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               {mobileMenu ? <X size={18} /> : <Menu size={18} />}
             </button>
             <Link href="/dashboard" className="lg:hidden flex items-center gap-2 min-h-[44px] px-1">
-              <div className="h-7 w-7 rounded-lg bg-[#111827] flex items-center justify-center text-white text-xs font-bold shrink-0">◈</div>
+              <div className="h-7 w-7 rounded-lg bg-primary-strong flex items-center justify-center text-white text-xs font-bold shrink-0">◈</div>
               <span className="font-semibold text-[15px] tracking-tight">folio</span>
             </Link>
 
             <div className="hidden sm:flex items-center gap-2 flex-1 max-w-[420px] ml-1">
               <div className="relative flex-1">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8a94] pointer-events-none" />
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 <input
                   placeholder="Search projects, certificates..."
-                  className="w-full h-10 pl-9 pr-3 rounded-full border border-[#e8e8ea] bg-[#f8f8f9] text-[14px] placeholder:text-[#8a8a94] focus:outline-none focus:bg-white focus:border-[#d0d0d6] focus:ring-2 focus:ring-[#111827]/[0.06] transition"
+                  className="w-full h-10 pl-9 pr-3 rounded-full border border-border bg-surface-2 text-[14px] placeholder:text-muted-foreground focus:outline-none focus:bg-card focus:border-border-strong focus:ring-2 focus:ring-primary-strong/[0.06] transition"
                   aria-label="Search"
                 />
               </div>
@@ -88,28 +88,28 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
               <button
                 onClick={() => setAddOpen(true)}
-                className="hidden sm:inline-flex h-10 px-5 items-center justify-center rounded-full bg-[#111827] text-white text-[14px] font-medium hover:bg-black active:scale-[0.98] transition"
+                className="hidden sm:inline-flex h-10 px-5 items-center justify-center rounded-full bg-primary-strong text-white text-[14px] font-medium hover:bg-black active:scale-[0.98] transition"
               >
                 ＋ Add
               </button>
-              <button className="h-11 w-11 shrink-0 rounded-full border border-[#e8e8ea] bg-white flex items-center justify-center relative active:bg-[#f3f3f5]" aria-label="Notifications">
+              <button className="h-11 w-11 shrink-0 rounded-full border border-border bg-card flex items-center justify-center relative active:bg-surface-2" aria-label="Notifications">
                 <Bell size={18} />
                 <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-[#ef4444] rounded-full border-2 border-white" />
               </button>
               {user ? (
                 <div className="hidden sm:flex items-center gap-2">
-                  <Avatar name={user.fullName || user.username} className="h-11 w-11 shrink-0 rounded-full border border-[#e8e8ea]" />
-                  <button onClick={handleLogout} className="h-11 w-11 shrink-0 rounded-full border border-[#e8e8ea] bg-white flex items-center justify-center hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition" aria-label="Log out">
+                  <Avatar name={user.fullName || user.username} className="h-11 w-11 shrink-0 rounded-full border border-border" />
+                  <button onClick={handleLogout} className="h-11 w-11 shrink-0 rounded-full border border-border bg-card flex items-center justify-center hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition" aria-label="Log out">
                     <LogOut size={16} />
                   </button>
                 </div>
               ) : (
-                <Avatar name="User" className="h-11 w-11 shrink-0 rounded-full border border-[#e8e8ea]" />
+                <Avatar name="User" className="h-11 w-11 shrink-0 rounded-full border border-border" />
               )}
               {/* mobile avatar */}
               {user && (
                 <div className="sm:hidden flex items-center gap-2">
-                  <Avatar name={user.fullName || user.username} className="h-11 w-11 shrink-0 rounded-full border border-[#e8e8ea]" />
+                  <Avatar name={user.fullName || user.username} className="h-11 w-11 shrink-0 rounded-full border border-border" />
                 </div>
               )}
             </div>
@@ -118,10 +118,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           {/* mobile search — visible only at <640px, 320px-friendly */}
           <div className="sm:hidden px-3 pb-3">
             <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8a94] pointer-events-none" />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
               <input
                 placeholder="Search projects, certificates, experiences..."
-                className="w-full h-11 pl-9 pr-3 rounded-full border border-[#e8e8ea] bg-[#f8f8f9] text-[14px] placeholder:text-[#8a8a94] focus:outline-none focus:bg-white focus:border-[#d0d0d6]"
+                className="w-full h-11 pl-9 pr-3 rounded-full border border-border bg-surface-2 text-[14px] placeholder:text-muted-foreground focus:outline-none focus:bg-card focus:border-border-strong"
                 aria-label="Search on mobile"
               />
             </div>
@@ -129,23 +129,23 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
           {/* mobile menu drawer — full tap targets */}
           {mobileMenu && (
-            <div className="lg:hidden border-t border-[#ececef] bg-white px-3 py-3 grid grid-cols-2 gap-2">
-              <Link href="/dashboard" className="min-h-[44px] px-3 py-3 rounded-xl bg-[#f3f3f5] text-sm font-medium flex items-center" onClick={() => setMobileMenu(false)}>
+            <div className="lg:hidden border-t border-border bg-card px-3 py-3 grid grid-cols-2 gap-2">
+              <Link href="/dashboard" className="min-h-[44px] px-3 py-3 rounded-xl bg-surface-2 text-sm font-medium flex items-center" onClick={() => setMobileMenu(false)}>
                 Dashboard
               </Link>
-              <Link href="/dashboard/projects" className="min-h-[44px] px-3 py-3 rounded-xl bg-[#f3f3f5] text-sm font-medium flex items-center" onClick={() => setMobileMenu(false)}>
+              <Link href="/dashboard/projects" className="min-h-[44px] px-3 py-3 rounded-xl bg-surface-2 text-sm font-medium flex items-center" onClick={() => setMobileMenu(false)}>
                 Projects
               </Link>
-              <Link href="/dashboard/certificates" className="min-h-[44px] px-3 py-3 rounded-xl bg-[#f3f3f5] text-sm font-medium flex items-center" onClick={() => setMobileMenu(false)}>
+              <Link href="/dashboard/certificates" className="min-h-[44px] px-3 py-3 rounded-xl bg-surface-2 text-sm font-medium flex items-center" onClick={() => setMobileMenu(false)}>
                 Certificates
               </Link>
-              <Link href="/dashboard/eca" className="min-h-[44px] px-3 py-3 rounded-xl bg-[#f3f3f5] text-sm font-medium flex items-center" onClick={() => setMobileMenu(false)}>
+              <Link href="/dashboard/eca" className="min-h-[44px] px-3 py-3 rounded-xl bg-surface-2 text-sm font-medium flex items-center" onClick={() => setMobileMenu(false)}>
                 ECA
               </Link>
-              <Link href="/dashboard/skills" className="min-h-[44px] px-3 py-3 rounded-xl bg-[#f3f3f5] text-sm font-medium flex items-center" onClick={() => setMobileMenu(false)}>
+              <Link href="/dashboard/skills" className="min-h-[44px] px-3 py-3 rounded-xl bg-surface-2 text-sm font-medium flex items-center" onClick={() => setMobileMenu(false)}>
                 Skills
               </Link>
-              <Link href="/dashboard/ai" className="min-h-[44px] px-3 py-3 rounded-xl bg-[#f3f3f5] text-sm font-medium flex items-center" onClick={() => setMobileMenu(false)}>
+              <Link href="/dashboard/ai" className="min-h-[44px] px-3 py-3 rounded-xl bg-surface-2 text-sm font-medium flex items-center" onClick={() => setMobileMenu(false)}>
                 AI Assistant
               </Link>
               {user && (
@@ -153,7 +153,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   <LogOut size={16} /> Log out ({user.username})
                 </button>
               )}
-              <Link href={user ? `/u/${user.username}` : "/login"} className="col-span-2 min-h-[44px] px-3 py-3 rounded-xl bg-[#111827] text-white text-sm font-medium text-center flex items-center justify-center" onClick={() => setMobileMenu(false)}>
+              <Link href={user ? `/u/${user.username}` : "/login"} className="col-span-2 min-h-[44px] px-3 py-3 rounded-xl bg-primary-strong text-white text-sm font-medium text-center flex items-center justify-center" onClick={() => setMobileMenu(false)}>
                 View public portfolio →
               </Link>
             </div>

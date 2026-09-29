@@ -52,7 +52,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-0 duration-150">
           <div
-            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-[#e8e8ea] space-y-4 animate-in zoom-in-95 duration-150"
+            className="w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl border border-border space-y-4 animate-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-4">
@@ -60,16 +60,16 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
                 <AlertTriangle size={20} />
               </div>
               <div className="space-y-1 min-w-0 flex-1">
-                <h3 className="text-base font-semibold text-[#111827]">
+                <h3 className="text-base font-semibold text-foreground">
                   {options.title || "Are you sure?"}
                 </h3>
-                <p className="text-sm text-[#6b6b76] leading-relaxed">
+                <p className="text-sm text-muted leading-relaxed">
                   {options.description || "This action cannot be undone."}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#f0f0f2]">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border-soft">
               <Button
                 type="button"
                 variant="secondary"

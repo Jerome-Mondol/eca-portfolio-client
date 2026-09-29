@@ -20,9 +20,9 @@ export default async function PublicPortfolioPage({ params }: Params) {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-[#fdfdfc] flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen page-warm flex flex-col items-center justify-center p-6 text-center">
         <h1 className="text-2xl font-semibold">Portfolio not found</h1>
-        <p className="text-sm text-[#6b6b76] mt-2">No portfolio for @{username}</p>
+        <p className="text-sm text-muted mt-2">No portfolio for @{username}</p>
         <Link href="/" className="mt-6">
           <Button>Go home</Button>
         </Link>

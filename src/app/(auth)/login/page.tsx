@@ -44,7 +44,7 @@ export default function LoginPage() {
   return (
     <Card className="w-full max-w-[420px] p-6 sm:p-7">
       <h1 className="text-xl font-semibold tracking-tight">Welcome back</h1>
-      <p className="text-sm text-[#6b6b76] mt-1">Log in to continue building your portfolio.</p>
+      <p className="text-sm text-muted mt-1">Log in to continue building your portfolio.</p>
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
         {error && <div className="rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2">{error}</div>}
         <div>
@@ -54,7 +54,7 @@ export default function LoginPage() {
         <div>
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
-            <Link href="/forgot-password" className="text-xs text-[#6b6b76] hover:text-[#111827]">
+            <Link href="/forgot-password" className="text-xs text-muted hover:text-foreground">
               Forgot password?
             </Link>
           </div>
@@ -63,14 +63,10 @@ export default function LoginPage() {
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? "Signing in..." : "Log in"}
         </Button>
-        <p className="text-center text-sm text-[#6b6b76]">
-          Don&apos;t have an account? <Link href="/register" className="font-medium text-[#111827] hover:underline">Create one</Link>
+        <p className="text-center text-sm text-muted">
+          Don&apos;t have an account? <Link href="/register" className="font-medium text-foreground hover:underline">Create one</Link>
         </p>
       </form>
-      <div className="mt-6 rounded-xl bg-[#f8f8f9] border border-[#e8e8ea] p-3">
-        <p className="text-xs font-medium">Secure auth</p>
-        <p className="text-xs text-[#6b6b76] mt-1">Access 15m + Refresh 7d</p>
-      </div>
     </Card>
   );
 }

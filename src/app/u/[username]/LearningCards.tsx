@@ -25,10 +25,10 @@ export function CertCard({ certificate: c, style }: Style & { certificate: any }
           <img src={fileUrl} alt={c.name} loading="lazy" decoding="async" />
         ) : (
           <div className="flex flex-col items-center gap-1.5 px-3 text-center">
-            <FileText size={22} className="text-[#6b6b76]" aria-hidden="true" />
-            <p className="text-xs font-medium text-[#111827] break-words line-clamp-2">{c.name}</p>
+            <FileText size={22} className="text-muted" aria-hidden="true" />
+            <p className="text-xs font-medium text-foreground break-words line-clamp-2">{c.name}</p>
             {c.documentName && (
-              <p className="text-[11px] text-[#6b6b76] break-words line-clamp-1">{c.documentName}</p>
+              <p className="text-[11px] text-muted break-words line-clamp-1">{c.documentName}</p>
             )}
           </div>
         )}

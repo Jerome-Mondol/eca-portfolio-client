@@ -13,7 +13,7 @@ type AvatarProps = {
 
 /** Dark enough that white initials stay legible. */
 const PALETTES = [
-  "#111827",
+  "#c2410c",
   "#0f766e",
   "#1d4ed8",
   "#b45309",
@@ -80,7 +80,7 @@ export function Avatar({ name, src, className, ratio = 0.4 }: AvatarProps) {
   useEffect(() => setPhotoFailed(false), [photo]);
 
   return (
-    <span className={cn("relative inline-flex shrink-0 overflow-hidden bg-white", className)}>
+    <span className={cn("relative inline-flex shrink-0 overflow-hidden bg-card", className)}>
       {photo && !photoFailed ? (
         <img
           src={photo}

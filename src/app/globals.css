@@ -1,27 +1,97 @@
 @import "tailwindcss";
 
+/*
+ * Palette — warm "paper" neutrals + coral primary.
+ *
+ * The four creams are close in luminance (0.80–0.94), so surfaces are
+ * separated by border + shadow rather than by fill contrast. Do not expect
+ * a card fill to read as elevated on its own.
+ *
+ *   #F5EBDD  page          #FCF9EA  card / raised
+ *   #F3E6D5  inset / hover #FFFAD3  highlight
+ *
+ * Coral is split by job, because #FF7F50 cannot carry meaning:
+ *   #FF7F50  2.4:1 on card — decorative fills only (never text, never
+ *            under white text, never a focus ring: it fails the 3:1
+ *            non-text bar).
+ *   #B0390C  5.8:1 on card, 6.1:1 under white text — this is what
+ *            paints buttons, active tabs, focus rings and links.
+ */
 :root {
-  --background: #fdfdfc;
-  --foreground: #1a1a1e;
-  --muted: #6b6b76;
-  --muted-foreground: #8a8a94;
-  --border: #e8e8ea;
-  --border-strong: #dedee2;
-  --card: #ffffff;
+  /* warm neutral ramp */
+  --background: #f5ebdd;
+  --background-soft: #fcf9ea;
+  --background-deep: #f3e6d5;
+  --background-tint: #fffad3;
+  --background-brand: #ffefe6;
+
+  --card: #fcf9ea;
   --card-foreground: #1a1a1e;
-  --accent: #111827;
+  --surface-2: #f3e6d5;
+  --surface-tint: #fffad3;
+  --surface-brand: #ffefe6;
+
+  /* ink — darkened from the old grays, which failed on tan (see ramp note) */
+  --foreground: #1a1a1e;
+  --muted: #5f5f6a;
+  --muted-strong: #4a4a52;
+  --muted-foreground: #63636e;
+
+  --border: #e6dac8;
+  --border-soft: #efe6d8;
+  --border-strong: #d8c7ae;
+
+  /* coral */
+  --primary: #ff7f50;
+  --primary-strong: #b0390c;
+  --primary-strong-hover: #953006;
+  --primary-soft: #ffdfd0;
+  --primary-foreground: #ffffff;
+  --accent: #c2410c;
   --accent-foreground: #ffffff;
-  --accent-soft: #f3f3f5;
-  --ring: #111827;
+  --accent-soft: #ffefe6;
+
+  --ring: #c2410c;
+
+  /* status — the success toast was near-black, which would have become coral
+     and read as a warning. Green keeps the meaning. */
+  --success: #127942;
+  --success-foreground: #ffffff;
+  --success-soft: #eaf6ef;
+  --success-border: #b9dfc7;
+
+  --shadow-card: 0 1px 2px rgb(90 60 30 / 5%), 0 4px 14px rgb(90 60 30 / 6%);
+  --shadow-raised: 0 10px 30px rgb(90 60 30 / 10%);
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-soft: var(--background-soft);
+  --color-background-deep: var(--background-deep);
+  --color-background-tint: var(--background-tint);
+  --color-background-brand: var(--background-brand);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
+  --color-muted-strong: var(--muted-strong);
+  --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-border-strong: var(--border-strong);
   --color-card: var(--card);
+  --color-surface-2: var(--surface-2);
+  --color-surface-tint: var(--surface-tint);
+  --color-surface-brand: var(--surface-brand);
+  --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-success-border: var(--success-border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --radius-sm: 8px;
@@ -29,6 +99,8 @@
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-2xl: 24px;
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
 }
 
 * {
@@ -83,11 +155,22 @@ img {
   height: 6px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d6d6db;
+  background: var(--border-strong);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* Page base — the four creams stacked for vertical depth, plus a soft coral
+   wash so the warmth is not flat. The coral is 10% over cream, so body text
+   keeps ~15:1 and muted text keeps ~4.9:1. */
+.page-warm {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(120% 70% at 50% -10%, rgb(255 127 80 / 10%), transparent 62%),
+    linear-gradient(180deg, var(--background-soft) 0%, var(--background) 45%, var(--background-deep) 100%);
+  background-attachment: fixed;
 }
 
 /* focus */
@@ -98,7 +181,7 @@ img {
 
 /* selection */
 ::selection {
-  background: #111827;
+  background: var(--primary-strong);
   color: white;
 }
 
@@ -510,7 +593,7 @@ a[aria-disabled="true"] {
   border-radius: 1.25rem;
   background: var(--card);
   padding: 0.95rem 1rem 0.95rem 1.15rem;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 4%), 0 4px 12px rgb(0 0 0 / 3%);
+  box-shadow: var(--shadow-card);
   animation: cred-card-enter 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
   transition: transform 220ms ease, box-shadow 220ms ease;
 }
@@ -518,19 +601,19 @@ a[aria-disabled="true"] {
   position: absolute;
   inset: 0 auto 0 0;
   width: 3px;
-  background: linear-gradient(to bottom, #10b981, #2dd4bf);
+  background: linear-gradient(to bottom, var(--primary), var(--primary-strong));
   transform: scaleY(0);
   transform-origin: bottom;
   content: "";
   transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.course-card:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgb(17 24 39 / 10%); }
+.course-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-raised); }
 .course-card:hover::before { transform: scaleY(1); }
 .course-card__provider {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 0.6875rem;
   letter-spacing: 0.06em;
-  color: #6b6b76;
+  color: var(--muted);
   overflow-wrap: break-word;
 }
 .course-card__name {
@@ -543,7 +626,7 @@ a[aria-disabled="true"] {
 .course-card__desc {
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: #4a4a52;
+  color: var(--muted-strong);
   overflow-wrap: break-word;
 }
 .course-card__tags {
@@ -553,12 +636,12 @@ a[aria-disabled="true"] {
   margin-top: 0.15rem;
 }
 .course-card__tag {
-  border: 1px solid #e8e8ea;
+  border: 1px solid var(--border);
   border-radius: 999px;
-  background: #f8f8f9;
+  background: var(--surface-2);
   padding: 0.15rem 0.5rem;
   font-size: 0.6875rem;
-  color: #3f3f46;
+  color: var(--muted-strong);
   white-space: nowrap;
 }
 .course-card__linked {

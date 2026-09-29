@@ -77,40 +77,40 @@ export function DatePicker({ value, onChange, placeholder = "Select date", disab
 
   return (
     <div ref={ref} className="relative">
-      {label && <p className="text-[13px] font-medium tracking-tight text-[#1a1a1e] mb-1.5">{label}</p>}
+      {label && <p className="text-[13px] font-medium tracking-tight text-foreground mb-1.5">{label}</p>}
       <button
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setOpen((v) => !v)}
         className={cn(
-          "flex h-11 w-full items-center justify-between rounded-xl border bg-white px-3 text-left text-sm transition cursor-pointer",
-          "border-[#e8e8ea] hover:border-[#d0d0d6] hover:bg-[#fcfcfd]",
-          "focus:outline-none focus:ring-2 focus:ring-[#111827]/10 focus:border-[#d0d0d6]",
-          "disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-[#f8f8f9]",
-          open && "border-[#111827] ring-2 ring-[#111827]/10 bg-white",
-          !value && "text-[#8a8a94]"
+          "flex h-11 w-full items-center justify-between rounded-xl border bg-card px-3 text-left text-sm transition cursor-pointer",
+          "border-border hover:border-border-strong hover:bg-card",
+          "focus:outline-none focus:ring-2 focus:ring-primary-strong/10 focus:border-border-strong",
+          "disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-surface-2",
+          open && "border-primary-strong ring-2 ring-primary-strong/10 bg-card",
+          !value && "text-muted-foreground"
         )}
       >
         <span className="flex items-center gap-2 min-w-0">
-          <span className="h-7 w-7 rounded-lg bg-[#f8f8f9] border border-[#e8e8ea] flex items-center justify-center shrink-0">
-            <CalendarDays size={14} className="text-[#6b6b76]" />
+          <span className="h-7 w-7 rounded-lg bg-surface-2 border border-border flex items-center justify-center shrink-0">
+            <CalendarDays size={14} className="text-muted" />
           </span>
           <span className="truncate">{value ? formatDisplay(value) : placeholder}</span>
         </span>
-        <Calendar size={14} className="text-[#8a8a94] shrink-0" />
+        <Calendar size={14} className="text-muted-foreground shrink-0" />
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-2 w-[300px] rounded-2xl border border-[#e8e8ea] bg-white shadow-[0_8px_32px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden animate-in fade-in slide-in-from-top-2">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#f0f0f2] bg-[#fcfcfd]">
-            <button type="button" onClick={() => setView(new Date(year, month - 1, 1))} className="h-8 w-8 rounded-full hover:bg-white border border-transparent hover:border-[#e8e8ea] hover:shadow-sm flex items-center justify-center cursor-pointer transition">
+        <div className="absolute z-50 mt-2 w-[300px] rounded-2xl border border-border bg-card shadow-[0_8px_32px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border-soft bg-card">
+            <button type="button" onClick={() => setView(new Date(year, month - 1, 1))} className="h-8 w-8 rounded-full hover:bg-card border border-transparent hover:border-border hover:shadow-sm flex items-center justify-center cursor-pointer transition">
               <ChevronLeft size={16} />
             </button>
             <div className="text-center">
               <p className="text-sm font-semibold tracking-tight">{monthNames[month]} {year}</p>
-              <p className="text-xs text-[#8a8a94]">Select date</p>
+              <p className="text-xs text-muted-foreground">Select date</p>
             </div>
-            <button type="button" onClick={() => setView(new Date(year, month + 1, 1))} className="h-8 w-8 rounded-full hover:bg-white border border-transparent hover:border-[#e8e8ea] hover:shadow-sm flex items-center justify-center cursor-pointer transition">
+            <button type="button" onClick={() => setView(new Date(year, month + 1, 1))} className="h-8 w-8 rounded-full hover:bg-card border border-transparent hover:border-border hover:shadow-sm flex items-center justify-center cursor-pointer transition">
               <ChevronRight size={16} />
             </button>
           </div>
@@ -118,7 +118,7 @@ export function DatePicker({ value, onChange, placeholder = "Select date", disab
           <div className="p-3">
             <div className="grid grid-cols-7 gap-1 mb-2">
               {weekDays.map((w) => (
-                <div key={w} className="h-7 flex items-center justify-center text-[11px] font-medium text-[#8a8a94] tracking-wide">
+                <div key={w} className="h-7 flex items-center justify-center text-[11px] font-medium text-muted-foreground tracking-wide">
                   {w}
                 </div>
               ))}
@@ -134,9 +134,9 @@ export function DatePicker({ value, onChange, placeholder = "Select date", disab
                   }}
                   className={cn(
                     "h-8 w-8 rounded-full text-xs font-medium flex items-center justify-center transition cursor-pointer",
-                    c.muted ? "text-[#c0c0c8] hover:bg-[#f8f8f9]" : "text-[#1a1a1e] hover:bg-[#f3f3f5]",
-                    c.isToday && !c.isSelected && "ring-1 ring-[#111827] ring-offset-1",
-                    c.isSelected && "bg-[#111827] text-white shadow-sm hover:bg-black"
+                    c.muted ? "text-muted-foreground hover:bg-surface-2" : "text-foreground hover:bg-surface-2",
+                    c.isToday && !c.isSelected && "ring-1 ring-primary-strong ring-offset-1",
+                    c.isSelected && "bg-primary-strong text-white shadow-sm hover:bg-black"
                   )}
                 >
                   {c.day}
@@ -145,14 +145,14 @@ export function DatePicker({ value, onChange, placeholder = "Select date", disab
             </div>
           </div>
 
-          <div className="flex items-center justify-between px-3 py-2.5 border-t border-[#f0f0f2] bg-[#fcfcfd]">
+          <div className="flex items-center justify-between px-3 py-2.5 border-t border-border-soft bg-card">
             <button
               type="button"
               onClick={() => {
                 onChange("");
                 setOpen(false);
               }}
-              className="text-xs font-medium text-[#6b6b76] hover:text-[#111827] px-2 py-1 rounded-full hover:bg-white border border-transparent hover:border-[#e8e8ea] cursor-pointer transition"
+              className="text-xs font-medium text-muted hover:text-foreground px-2 py-1 rounded-full hover:bg-card border border-transparent hover:border-border cursor-pointer transition"
             >
               Clear
             </button>
@@ -165,7 +165,7 @@ export function DatePicker({ value, onChange, placeholder = "Select date", disab
                   setView(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
                   setOpen(false);
                 }}
-                className="text-xs font-medium bg-[#111827] text-white px-3 py-1.5 rounded-full hover:bg-black cursor-pointer transition"
+                className="text-xs font-medium bg-primary-strong text-white px-3 py-1.5 rounded-full hover:bg-black cursor-pointer transition"
               >
                 Today
               </button>

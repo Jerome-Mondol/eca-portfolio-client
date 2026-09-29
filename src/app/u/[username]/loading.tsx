@@ -9,12 +9,12 @@ import { Skeleton } from "@/components/ui/skeleton";
  */
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-[#fdfdfc] overflow-x-hidden">
+    <div className="min-h-screen page-warm overflow-x-hidden">
       {/* header */}
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-[#ececef]">
+      <div className="sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="mx-auto max-w-[1080px] px-3 sm:px-6 h-[56px] flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-[#ececef]" />
+            <div className="h-7 w-7 rounded-lg bg-border" />
             <Skeleton className="h-4 w-12" />
           </div>
           <div className="flex items-center gap-2">
@@ -56,7 +56,7 @@ export default function Loading() {
           <Skeleton className="h-5 w-40" />
           <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {[0, 1, 2].map((card) => (
-              <div key={card} className="rounded-xl border border-[#ececef] bg-white p-4">
+              <div key={card} className="rounded-xl border border-border bg-card p-4">
                 <Skeleton className="h-36 w-full rounded-xl" />
                 <Skeleton className="mt-3 h-4 w-3/4" />
                 <Skeleton className="mt-2 h-3 w-1/2" />

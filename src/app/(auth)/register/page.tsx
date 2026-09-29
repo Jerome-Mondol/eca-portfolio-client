@@ -53,7 +53,7 @@ export default function RegisterPage() {
   return (
     <Card className="w-full max-w-[420px] p-6 sm:p-7">
       <h1 className="text-xl font-semibold tracking-tight">Create your portfolio</h1>
-      <p className="text-sm text-[#6b6b76] mt-1">Start building a portfolio you can put on your CV — ECA showcase for education.</p>
+      <p className="text-sm text-muted mt-1">Start building a portfolio you can put on your CV — ECA showcase for education.</p>
       <form onSubmit={onSubmit} className="mt-6 space-y-4">
         {error && <div className="rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2">{error}</div>}
         <div>
@@ -67,10 +67,10 @@ export default function RegisterPage() {
         <div>
           <Label htmlFor="username">Username</Label>
           <div className="flex items-center gap-2 mt-1.5">
-            <span className="text-sm text-[#8a8a94] whitespace-nowrap">folio.com/u/</span>
+            <span className="text-sm text-muted-foreground whitespace-nowrap">folio.com/u/</span>
             <Input id="username" placeholder="john-doe" required value={username} onChange={(e) => setUsername(e.target.value)} />
           </div>
-          <p className="text-xs text-[#8a8a94] mt-1">Lowercase letters, numbers, hyphen. Public portfolio URL.</p>
+          <p className="text-xs text-muted-foreground mt-1">Lowercase letters, numbers, hyphen. Public portfolio URL.</p>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -85,11 +85,10 @@ export default function RegisterPage() {
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? "Creating..." : "Create my portfolio"}
         </Button>
-        <p className="text-center text-sm text-[#6b6b76]">
-          Already have an account? <Link href="/login" className="font-medium text-[#111827] hover:underline">Log in</Link>
+        <p className="text-center text-sm text-muted">
+          Already have an account? <Link href="/login" className="font-medium text-foreground hover:underline">Log in</Link>
         </p>
       </form>
-      <p className="mt-4 text-xs text-center text-[#8a8a94]">Neon + Upstash • Access 15m + Refresh 7d rotation</p>
     </Card>
   );
 }

@@ -61,8 +61,10 @@ export async function apiFetch(path: string, opts: ApiOptions = {}, isRetry = fa
     throw new Error("Session expired. Please log in again.");
   }
 
+  const isFormData = typeof FormData !== "undefined" && opts.body instanceof FormData;
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    // For multipart the browser must pick the boundary itself, so we omit it.
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(opts.headers as Record<string, string> | undefined),
   };
   const token = getAccessToken();
@@ -239,7 +241,8 @@ export async function updateProfileApi(payload: Partial<Profile>) {
 /* Projects                                                                   */
 /* -------------------------------------------------------------------------- */
 
-export type Project = { id: string; userId: string; title: string; description?: string | null; technologies?: string[] | null; skills?: string[] | null; githubUrl?: string | null; liveUrl?: string | null; featured?: boolean; visibility?: string; createdAt?: string };
+export type ProjectLink = { platform: string; url: string; verified?: boolean; statusText?: string };
+export type Project = { id: string; userId: string; title: string; description?: string | null; technologies?: string[] | null; skills?: string[] | null; githubUrl?: string | null; liveUrl?: string | null; links?: ProjectLink[] | null; coverImage?: string | null; featured?: boolean; visibility?: string; createdAt?: string };
 export async function listProjectsApi() {
   return cachedGet<{ data: Project[] }>("projects", "/api/projects");
 }
@@ -297,7 +300,7 @@ export async function deleteActivityApi(id: string) {
 /* Certificates                                                               */
 /* -------------------------------------------------------------------------- */
 
-export type Certificate = { id: string; userId: string; name: string; organization?: string | null; issueDate?: string | null; skills?: string[] | null; credentialId?: string | null; credentialUrl?: string | null; documentKey?: string | null; documentName?: string | null; visibility?: string; createdAt?: string };
+export type Certificate = { id: string; userId: string; name: string; organization?: string | null; issueDate?: string | null; skills?: string[] | null; credentialId?: string | null; credentialUrl?: string | null; documentKey?: string | null; documentName?: string | null; visibility?: string; aiAnalysis?: AiAnalysis | null; createdAt?: string };
 export async function listCertificatesApi() {
   return cachedGet<{ data: Certificate[] }>("certificates", "/api/certificates");
 }
@@ -318,6 +321,109 @@ export async function deleteCertificateApi(id: string) {
   const current = readResource<{ data: Certificate[] }>("certificates")?.data ?? [];
   seedList("certificates", current.filter((x) => x.id !== id));
   return res;
+}
+
+/* -------------------------------------------------------------------------- */
+/* AI certificate analysis                                                     */
+/* -------------------------------------------------------------------------- */
+
+export type AiCheck = { key: string; label: string; passed: boolean; weight: number; reason: string };
+export type AiSource = { title: string | null; url: string };
+export type AiAnalysis = {
+  certificateId?: string;
+  type: "certificate";
+  version: number;
+  model: string;
+  score: number;
+  status: "verified" | "partially_verified" | "unverified";
+  checks: AiCheck[];
+  analyzedAt: string;
+  extracted: {
+    documentType: string;
+    legibility: number;
+    courseName: string | null;
+    organization: string | null;
+    date: string | null;
+    certificateId: string | null;
+    credentialUrl: string | null;
+    skills: string[];
+    rawTextExcerpt: string | null;
+  };
+  research: {
+    issuerStatus: "found" | "not_found" | "inconclusive";
+    issuerName: string | null;
+    issuerDescription: string | null;
+    accreditation: string | null;
+    credentialUrlStatus: "resolves" | "broken" | "not_checked";
+    evidence: string[];
+    sources: AiSource[];
+    unavailable: boolean;
+    error?: string;
+  };
+};
+
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+/**
+ * Runs the full extract -> research -> score pipeline. This is a slow call
+ * (10-25s) and there is no cancellation, so the UI must show progress rather
+ * than an empty spinner.
+ */
+export async function analyzeCertificateApi(file: File, certificateId?: string) {
+  if (file.size > MAX_UPLOAD_BYTES) {
+    throw new Error("That file is too large. Keep it under 10 MB.");
+  }
+  const form = new FormData();
+  form.append("file", file);
+  if (certificateId) form.append("certificateId", certificateId);
+
+  const data = await apiFetch("/api/ai/certificates/analyze", {
+    method: "POST",
+    auth: true,
+    body: form,
+  });
+
+  // Reflect the saved analysis in the cached certificate list.
+  const savedId = (data.data as AiAnalysis).certificateId;
+  if (savedId) {
+    const current = readResource<{ data: Certificate[] }>("certificates")?.data ?? [];
+    seedList(
+      "certificates",
+      current.map((x) => (x.id === savedId ? { ...x, aiAnalysis: data.data } : x)),
+    );
+  }
+  return data as { data: AiAnalysis };
+}
+
+/* -------------------------------------------------------------------------- */
+/* AI project description improvement                                          */
+/* -------------------------------------------------------------------------- */
+
+export type AiMissingInfo = {
+  field: "outcome" | "metric" | "role" | "users" | "tech" | "scope" | "link";
+  question: string;
+  why: string;
+};
+
+export type AiProjectSuggestion = {
+  description: string;
+  title: string | null;
+  technologies: string[];
+  highlights: string[];
+  missing: AiMissingInfo[];
+  confidence: number;
+};
+
+/**
+ * Returns a proposal only. Nothing is saved — the student accepts, edits or
+ * rejects, and saving goes through /api/projects like any other edit.
+ */
+export async function improveProjectApi(payload: { description: string; title?: string | null }) {
+  return (await apiFetch("/api/ai/projects/improve", {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify(payload),
+  })) as { data: AiProjectSuggestion };
 }
 
 /* -------------------------------------------------------------------------- */

@@ -30,7 +30,12 @@ export const viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-[#fdfdfc] text-[#1a1a1e]">
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        {/* Reveal starts elements at opacity 0 so they can animate in. Without JS
+            the observer never runs, so force them visible rather than hiding the page. */}
+        <noscript>
+          <style>{`[data-reveal]{opacity:1!important;transform:none!important}`}</style>
+        </noscript>
         <AuthProvider>
           <ConfirmProvider>
             <ToastProvider>{children}</ToastProvider>

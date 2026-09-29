@@ -85,15 +85,15 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
   const linkedin = socials.find((s) => s.platform.toLowerCase().includes("linkedin"));
 
   return (
-    <div className="min-h-screen bg-[#fdfdfc] overflow-x-hidden">
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-[#ececef] supports-[backdrop-filter]:bg-white/75">
+    <div className="min-h-screen page-warm overflow-x-hidden">
+      <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border supports-[backdrop-filter]:bg-card/75">
         <div className="mx-auto max-w-[1080px] px-3 sm:px-6 h-[56px] flex items-center justify-between gap-2">
           <Link href="/" className="flex items-center gap-2 min-h-[44px]">
-            <div className="h-7 w-7 rounded-lg bg-[#111827] flex items-center justify-center text-white text-xs font-bold shrink-0">◈</div>
+            <div className="h-7 w-7 rounded-lg bg-primary-strong flex items-center justify-center text-white text-xs font-bold shrink-0">◈</div>
             <span className="font-semibold text-sm">folio</span>
           </Link>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="hidden sm:inline text-xs text-[#6b6b76] truncate">folio.com/u/{user.username}</span>
+            <span className="hidden sm:inline text-xs text-muted truncate">folio.com/u/{user.username}</span>
             <a href="#contact">
               <Button size="sm" className="min-h-[40px]">Contact</Button>
             </a>
@@ -109,21 +109,21 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
               <Avatar
                 name={user.fullName || user.username}
                 src={avatarSrc}
-                className="h-32 w-32 sm:h-36 sm:w-36 rounded-[28px] border border-[#e8e8ea] shadow-md bg-white"
+                className="h-32 w-32 sm:h-36 sm:w-36 rounded-[28px] border border-border shadow-md bg-white"
                 ratio={0.42}
               />
             </div>
             <h1 className="mt-4 text-[26px] sm:text-[32px] font-semibold tracking-tight break-words">{user.fullName}</h1>
-            <p className="text-sm text-[#111827] font-medium break-words">{profile?.headline ?? "Student"}</p>
+            <p className="text-sm text-foreground font-medium break-words">{profile?.headline ?? "Student"}</p>
             {profile?.location && (
-              <p className="text-xs text-[#6b6b76] mt-1 flex items-center justify-center lg:justify-start gap-1">
+              <p className="text-xs text-muted mt-1 flex items-center justify-center lg:justify-start gap-1">
                 <MapPin size={12} /> {profile.location}
               </p>
             )}
             {profile?.bio ? (
-              <p className="mt-4 text-sm leading-6 text-[#4a4a52] max-w-[560px] mx-auto lg:mx-0 break-words">{profile.bio}</p>
+              <p className="mt-4 text-sm leading-6 text-muted-strong max-w-[560px] mx-auto lg:mx-0 break-words">{profile.bio}</p>
             ) : (
-              <p className="mt-4 text-sm leading-6 text-[#8a8a94] max-w-[560px] mx-auto lg:mx-0">No bio yet.</p>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground max-w-[560px] mx-auto lg:mx-0">No bio yet.</p>
             )}
             <div className="mt-5 flex flex-col sm:flex-row flex-wrap justify-center lg:justify-start gap-2">
               {hasProjects && (
@@ -147,7 +147,7 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
                     href={socialHref(s.url)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 border border-[#e8e8ea] rounded-full px-3 py-1.5 bg-white hover:bg-[#f8f8f9] text-xs"
+                    className="inline-flex items-center gap-1.5 border border-border rounded-full px-3 py-1.5 bg-white hover:bg-surface-2 text-xs"
                   >
                     {getPlatformIcon(s.platform, 12)} {s.platform}
                   </a>
@@ -175,10 +175,10 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
                     <p className="text-xs font-medium text-[#ef6b75] mb-2">{getExperienceDateRange(ex)}</p>
                   )}
                   <h3 className="font-semibold text-sm break-words">{ex.position}</h3>
-                  <p className="text-sm text-[#6b6b76] break-words">
+                  <p className="text-sm text-muted break-words">
                     {[ex.organization, ex.location].filter(Boolean).join(" | ") || "-"}
                   </p>
-                  {ex.description && <p className="text-sm text-[#4a4a52] mt-2 break-words">{ex.description}</p>}
+                  {ex.description && <p className="text-sm text-muted-strong mt-2 break-words">{ex.description}</p>}
                   {ex.skills?.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-3">
                       {ex.skills.map((skill: string) => (
@@ -198,7 +198,7 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
         <section id="projects" className="mx-auto max-w-[1080px] px-3 sm:px-6 py-4 sm:py-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold tracking-tight">Projects</h2>
-            <span className="text-xs text-[#8a8a94]">
+            <span className="text-xs text-muted-foreground">
               {projects.length} project{projects.length > 1 ? "s" : ""}
             </span>
           </div>
@@ -260,7 +260,7 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
                             href={socialHref(link.url)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-[#111827] transition hover:bg-white/85"
+                            className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-white/85"
                           >
                             {getPlatformIcon(link.platform, 12)}
                             {link.platform}
@@ -282,7 +282,7 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
         <section className="mx-auto max-w-[1080px] px-3 sm:px-6 py-4 sm:py-6">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold tracking-tight">ECA &amp; Activities</h2>
-            <span className="text-xs text-[#8a8a94]">
+            <span className="text-xs text-muted-foreground">
               {activities.length} {activities.length === 1 ? "activity" : "activities"}
             </span>
           </div>
@@ -299,7 +299,7 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
         <section className="mx-auto max-w-[1080px] px-3 sm:px-6 py-4 sm:py-6">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold tracking-tight">Courses &amp; Certificates</h2>
-            <span className="text-xs text-[#8a8a94]">
+            <span className="text-xs text-muted-foreground">
               {certificates.length + courses.length}{" "}
               {certificates.length + courses.length === 1 ? "item" : "items"}
             </span>
@@ -327,11 +327,11 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
           <Card className="mt-4 p-4">
             <div className="space-y-2">
               {achievements.map((a: any) => (
-                <div key={a.id} className="flex gap-3 py-2 border-b last:border-0 border-[#f0f0f2] min-w-0">
+                <div key={a.id} className="flex gap-3 py-2 border-b last:border-0 border-border-soft min-w-0">
                   <span className="text-lg shrink-0" aria-hidden="true">&#127942;</span>
                   <div className="min-w-0">
                     <p className="text-sm font-medium break-words">{a.title}</p>
-                    <p className="text-xs text-[#6b6b76] break-words">
+                    <p className="text-xs text-muted break-words">
                       {[a.category, a.organization, a.date].filter(Boolean).join(" • ")} • {a.description ?? ""}
                     </p>
                   </div>
@@ -349,7 +349,7 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
           <div className="mt-4 flex flex-wrap gap-1.5">
             {skills.map((s: any) => (
               <Badge key={s.id} className="text-sm px-3 py-1.5">
-                {s.name} <span className="text-[#8a8a94] ml-1">{s.category}</span>
+                {s.name} <span className="text-muted-foreground ml-1">{s.category}</span>
               </Badge>
             ))}
           </div>
@@ -360,7 +360,7 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
       <section id="contact" className="mx-auto max-w-[1080px] px-3 sm:px-6 py-6 sm:py-8">
         <Card className="p-6 sm:p-8 text-center">
           <h2 className="text-lg font-semibold">Contact</h2>
-          <p className="text-sm text-[#6b6b76] mt-1">Available for internships and collaboration.</p>
+          <p className="text-sm text-muted mt-1">Available for internships and collaboration.</p>
           <div className="mt-4 flex flex-col sm:flex-row justify-center gap-2">
             {github && (
               <a href={socialHref(github.url)} target="_blank" rel="noopener noreferrer">
@@ -383,7 +383,7 @@ export function PortfolioView({ data }: { data: PublicPortfolio }) {
             </a>
           </div>
         </Card>
-        <p className="text-center text-xs text-[#8a8a94] mt-6 px-2">
+        <p className="text-center text-xs text-muted-foreground mt-6 px-2">
           Built with folio —{" "}
           <Link href="/register" className="underline">
             Create yours

@@ -74,34 +74,34 @@ export function Select({
         onClick={() => !disabled && setIsOpen((prev) => !prev)}
         onKeyDown={handleKeyDown}
         className={cn(
-          "flex h-11 w-full items-center justify-between rounded-xl border bg-white px-3.5 text-left text-sm text-[#1a1a1e] transition-all cursor-pointer select-none",
-          "border-[#e8e8ea] hover:border-[#d0d0d6] hover:bg-[#fcfcfd]",
-          "focus:outline-none focus:ring-2 focus:ring-[#111827]/10 focus:border-[#d0d0d6]",
-          disabled && "opacity-50 cursor-not-allowed bg-[#f8f8f9]",
-          isOpen && "border-[#111827] ring-2 ring-[#111827]/10 bg-white"
+          "flex h-11 w-full items-center justify-between rounded-xl border bg-card px-3.5 text-left text-sm text-foreground transition-all cursor-pointer select-none",
+          "border-border hover:border-border-strong hover:bg-card",
+          "focus:outline-none focus:ring-2 focus:ring-primary-strong/10 focus:border-border-strong",
+          disabled && "opacity-50 cursor-not-allowed bg-surface-2",
+          isOpen && "border-primary-strong ring-2 ring-primary-strong/10 bg-card"
         )}
       >
         <span className="truncate flex items-center gap-2.5">
           {selectedOption ? (
             <>
-              {selectedOption.icon && <span className="shrink-0 text-[#6b6b76]">{selectedOption.icon}</span>}
-              <span className="font-medium text-[#1a1a1e]">{selectedOption.label}</span>
+              {selectedOption.icon && <span className="shrink-0 text-muted">{selectedOption.icon}</span>}
+              <span className="font-medium text-foreground">{selectedOption.label}</span>
             </>
           ) : (
-            <span className="text-[#8a8a94]">{placeholder}</span>
+            <span className="text-muted-foreground">{placeholder}</span>
           )}
         </span>
         <ChevronDown
           size={16}
           className={cn(
-            "text-[#6b6b76] shrink-0 transition-transform duration-200 ml-2",
-            isOpen && "rotate-180 text-[#111827]"
+            "text-muted shrink-0 transition-transform duration-200 ml-2",
+            isOpen && "rotate-180 text-foreground"
           )}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-[calc(100%+6px)] z-50 w-full min-w-[180px] rounded-xl border border-[#e8e8ea] bg-white p-1.5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] animate-in fade-in-0 zoom-in-95 duration-100">
+        <div className="absolute left-0 top-[calc(100%+6px)] z-50 w-full min-w-[180px] rounded-xl border border-border bg-card p-1.5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] animate-in fade-in-0 zoom-in-95 duration-100">
           <div className="max-h-60 overflow-y-auto space-y-0.5 scrollbar-thin">
             {normalizedOptions.map((option) => {
               const isSelected = option.value === value;
@@ -116,13 +116,13 @@ export function Select({
                   className={cn(
                     "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition text-left cursor-pointer",
                     isSelected
-                      ? "bg-[#111827] text-white font-medium"
-                      : "text-[#1a1a1e] hover:bg-[#f3f3f5]"
+                      ? "bg-primary-strong text-white font-medium"
+                      : "text-foreground hover:bg-surface-2"
                   )}
                 >
                   <span className="flex items-center gap-2.5 truncate">
                     {option.icon && (
-                      <span className={cn("shrink-0", isSelected ? "text-white" : "text-[#6b6b76]")}>
+                      <span className={cn("shrink-0", isSelected ? "text-white" : "text-muted")}>
                         {option.icon}
                       </span>
                     )}

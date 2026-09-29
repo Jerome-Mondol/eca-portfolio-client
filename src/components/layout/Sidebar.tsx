@@ -44,11 +44,11 @@ export function Sidebar() {
   const { success } = useToast();
 
   return (
-    <aside className="hidden lg:flex w-[260px] shrink-0 flex-col border-r border-[#ececef] bg-white sticky top-0 h-screen overflow-y-auto">
-      <div className="h-[56px] flex items-center gap-2 px-5 border-b border-[#ececef] shrink-0">
-        <div className="h-7 w-7 rounded-lg bg-[#111827] flex items-center justify-center text-[13px] font-bold">◈</div>
+    <aside className="hidden lg:flex w-[260px] shrink-0 flex-col border-r border-border bg-card sticky top-0 h-screen overflow-y-auto">
+      <div className="h-[56px] flex items-center gap-2 px-5 border-b border-border shrink-0">
+        <div className="h-7 w-7 rounded-lg bg-primary-strong flex items-center justify-center text-[13px] font-bold">◈</div>
         <span className="text-[15px] font-semibold tracking-tight">folio</span>
-        <span className="ml-auto text-xs text-[#8a8a94]">v1.0</span>
+        <span className="ml-auto text-xs text-muted-foreground">v1.0</span>
       </div>
       <nav className="p-3 space-y-0.5 flex-1">
         {nav.map((item) => {
@@ -62,31 +62,26 @@ export function Sidebar() {
               prefetch
               className={cn(
                 "flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13.5px] font-medium transition cursor-pointer",
-                active ? "bg-[#111827] text-white shadow-sm" : "text-[#4a4a52] hover:bg-[#f6f6f7] hover:text-[#111827]"
+                active ? "bg-primary-strong text-white shadow-sm" : "text-muted-strong hover:bg-surface-2 hover:text-foreground"
               )}
             >
-              <item.icon size={16} className={cn(active ? "text-white" : "text-[#8a8a94]")} />
+              <item.icon size={16} className={cn(active ? "text-white" : "text-muted-foreground")} />
               {item.label}
             </Link>
           );
         })}
       </nav>
-      <div className="p-4 border-t border-[#ececef] space-y-3">
+      <div className="p-4 border-t border-border space-y-3">
         {user && (
-          <div className="flex items-center gap-2.5 rounded-xl bg-[#f8f8f9] border border-[#e8e8ea] p-2.5">
-            <Avatar name={user.fullName || user.username} className="h-8 w-8 rounded-full border border-[#e8e8ea]" ratio={0.45} />
+          <div className="flex items-center gap-2.5 rounded-xl bg-surface-2 border border-border p-2.5">
+            <Avatar name={user.fullName || user.username} className="h-8 w-8 rounded-full border border-border" ratio={0.45} />
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold truncate">{user.fullName}</p>
-              <p className="text-xs text-[#6b6b76] truncate">@{user.username}</p>
+              <p className="text-xs text-muted truncate">@{user.username}</p>
             </div>
           </div>
         )}
-        <div className="rounded-2xl bg-[#f8f8f9] border border-[#e8e8ea] p-3">
-          <p className="text-xs font-semibold">Portfolio views</p>
-          <p className="text-xl font-semibold tracking-tight mt-1">1,248</p>
-          <p className="text-xs text-[#6b6b76]">+24 this week</p>
-        </div>
-        <Link href={user ? `/u/${user.username}` : "/login"} className="flex items-center justify-center rounded-full bg-white border border-[#e8e8ea] h-9 text-sm font-medium hover:bg-[#f3f3f5] transition">
+        <Link href={user ? `/u/${user.username}` : "/login"} className="flex items-center justify-center rounded-full bg-card border border-border h-9 text-sm font-medium hover:bg-surface-2 transition">
           View public portfolio →
         </Link>
         {user && (
@@ -96,7 +91,7 @@ export function Sidebar() {
               success("Signed out");
               router.push("/login");
             }}
-            className="w-full flex items-center justify-center rounded-full bg-white border border-red-200 text-red-600 h-9 text-sm font-medium hover:bg-red-50 transition cursor-pointer"
+            className="w-full flex items-center justify-center rounded-full bg-card border border-red-200 text-red-600 h-9 text-sm font-medium hover:bg-red-50 transition cursor-pointer"
           >
             Log out
           </button>
